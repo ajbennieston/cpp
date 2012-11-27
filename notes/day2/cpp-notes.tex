@@ -1,0 +1,462 @@
+\documentclass[a4paper]{scrartcl}
+
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath,amssymb}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit}
+
+\usepackage[pdftex, colorlinks]{hyperref}
+\usepackage[figure, table]{hypcap} % Fix a problem with hyperref
+\hypersetup{
+    bookmarksnumbered,
+    pdfstartview={Fit},
+    citecolor={black},
+    linkcolor={black},
+    urlcolor={black},
+    pdfpagemode={UseOutlines}
+}
+
+% Make hyperlinks jump to the right place
+\makeatletter
+\newcommand\org@hypertarget{}
+\let\org@hypertarget\hypertarget
+\renewcommand\hypertarget[2]{%
+\Hy@raisedlink{\org@hypertarget{#1}{}}#2%
+} \makeatother
+
+% Space between paragraphs, rather than indented paragraphs
+\parindent 0pt
+\parskip 1ex
+
+\title{Computing Course Day 2\\
+Notes \& Discussion\\
+Second Edition}
+\author{Andrew J. Bennieston}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\pagebreak
+
+\section{Introduction}
+This document is a set of notes expanding on some of the issues in day two of the 2010 and 2011 C++ course. Many of the things discussed here stem from comments or questions during the day itself.
+
+\section{Shadowing \& Overloading}
+\subsection{Shadowing}
+In C++, you can declare a variable in a nested scope with the same name as variables in an outer scope; this is \emph{shadowing}. You may also try to declare local variables with the same names as function arguments; this is another example of shadowing, but modern compilers will treat this as an error.
+
+Shadowing is usually not what you wanted to do, and can result in unexpected behaviour. Luckily, if you use the right set of compiler warning flags, \verb|g++| will tell you when you do this and you'll be able to figure out if that really is what you intended (try \texttt{-Wshadow}). Often, it is not! Consider, for example, the code below.
+\begin{verbatim}
+void add(double a, double b, double& answer)
+{
+  double a, b;
+  answer = a + b;
+}
+\end{verbatim}
+
+In this code, we've defined a function called \verb|add| which takes two doubles by value and one reference to a double. Then, we've declared two more doubles with the same names as the first two arguments. When we hit the line with the addition operator, we're adding the local \verb|a| to the local \verb|b| and storing the result in the variable \verb|ans| which was passed in by reference. Since the local variables were uninitialised, \verb|ans| will contain the result of adding together whatever was contained in the memory used by those variables---almost certainly not the values of the function arguments \verb|a| and \verb|b|.
+
+Be very careful with things like this. The above example is, of course, just a simple programming mistake, but if you have a function which takes a variable called \verb|i| or \verb|n|, and then write a loop or use some local counter with the same name, you will often run into strange behaviour as the local variable hides (shadows) the parameter. This is a good reason to use long, descriptive variable names, except in very small loops where \verb|i|, \verb|n| etc. are acceptable. It is also a good reason to avoid long functions. If your function exceeds a hundred lines or so, it is likely a good candidate for splitting up into smaller functions. Your function can then just call those functions in turn, and the chance of unusual effects arising from mistaken identity between variables is greatly reduced.
+
+\subsection{Overloading}
+C++ allows \emph{function overloading}; that is, you can define multiple functions with the same \emph{name} but different \emph{signatures}. Take a look at the example below, which defines two \verb|length()| functions, one taking three arguments and performing a 3-vector length computation, and one taking four arguments and performing a 4-vector length computation.
+
+\begin{verbatim}
+double length(double x, double y, double z)
+{
+  return sqrt( x*x + y*y + z*z );
+}
+
+double length(double t, double x, double y, double z)
+{
+  double len3 = length(x, y, z);
+  return sqrt( t*t - len3*len3 );
+}
+\end{verbatim}
+
+With the above definitions, you can call the function \verb|length| with either three or four arguments, and the correct version will be found automatically. There are some restrictions to this mechanism, though...
+
+You cannot overload based on return type. In other words, if two functions differ only by the type they return, they are not considered to be overloads, and result in an ambiguity. If you have \verb|int square(int x);| and \verb|double square(int x);|, the compiler cannot tell, from a call to \verb|square(x)| which one you meant. The return type is not considered when trying to determine this. Of course, if you had \verb|int square(int x)| and \verb|double square(double x)|, the function signatures would differ and overloading would be allowed.
+
+\section{Interface Design}
+Much of day 2 involved adapting functions to use pass-by-reference or pass-by-pointer, and to return status through a boolean value. The design of an interface (e.g. the arguments a function takes, whether they are pointers, references or values, and the return type) can be an important part of programming, and deserves some careful thought.
+
+\subsection{Pass-by-value vs. Pass-by-reference}
+In general, if you can pass a reference into a function, it is better than passing a value. If you wish to safeguard against the function changing the object passed in, you can pass a reference-to-const:
+\begin{verbatim}
+bool add(const double& a, const double& b, double& answer);
+\end{verbatim}
+
+The \texttt{const} keyword tells the compiler that this variable cannot be changed, and any attempt to do so will result in a compiler error. In the above function declaration, we have said that we're passing in two references to const doubles, and one reference to double. The compiler will allow us to add \verb|a| and \verb|b| together, and store the result in \verb|answer|, but it will not allow us to change either \verb|a| or \verb|b| inside this function. We retain the safety of pass-by-value---the function cannot change our operands outside of itself (or inside!)---but gain the convenience and speed of pass-by-reference!
+
+Sometimes, passing by value is necessary if you want a local copy in your function. This might happen if you want to make changes inside your function as a precursor to returning a result, without affecting the original object. Note, though, that changes you make to a local copy will disappear when the function returns, so in these situations you had better be using the local copy in the production of your eventual return value. An example follows.
+\begin{verbatim}
+bool multiply_magnitudes(double a, double b, double& answer)
+{
+  if ( a < 0 )
+    a = fabs(a);
+  if ( b < 0 )
+    b = fabs(b);
+  answer = a * b;
+  return true;
+}
+\end{verbatim}
+
+Note, though, that we could have done this as follows (and produced two temporary variables in the process):
+\begin{verbatim}
+bool multiply_as_positive(const double& a, const double& b, double& answer)
+{
+  answer = fabs(a) * fabs(b);
+  return true;
+}
+\end{verbatim}
+
+\subsection{Pass-by-pointer}
+Passing by pointer is almost never the right behaviour. You should always pass by reference if you can. However, when dealing with arrays, or other complex structures in memory, passing around pointers is necessary. Note that an array \emph{decays} into a pointer when passed to a function, and that you'll also need to pass the \emph{size} of the array as a second parameter. Take a look at the function below which finds the largest element in an array:
+\begin{verbatim}
+double max(const double* array, const int size)
+{
+  double maximum(0.0);
+  if ( size > 0 )
+  {
+    maximum = array[0];
+    for(int i = 1; i < size; ++i)
+    {
+      if ( array[i] > maximum )
+      {
+        maximum = array[i]
+      }
+    }
+  }
+  return maximum;
+}
+\end{verbatim}
+
+Note that we've passed the array as a pointer to \verb|const double| since we don't want to \emph{change} the values in the array, just iterate over them and look for the biggest. Also note that the size is passed as a \verb|const int| so that we can't inadvertently change it in the function and risk overrunning the end of the array! Finally, note that we check that size is greater than zero before we do anything involving the array!
+
+\subsection{Return values \& signalling errors}
+The simplest way to get a value back from a function is to return it, but often a function can fail in one or more ways, and we might want to know this too. As you saw in the exercises for day 2, you can rewrite functions to take a reference argument to store the result, and return an integer or boolean value indicating whether or not the function succeeded. For more complex scenarios, this kind of error reporting is invaluable (the entire C library is built around this concept!) as long as you remember to check the status before using the result of a function.
+
+\section{Initialisation of Pointers}
+Pointers are particularly dangerous when they remain uninitialised since a pointer stores the memory address of some other variable. If you \emph{dereference} a pointer, the program attempts to access that memory location. Attempts to access memory locations which \emph{are not} in a valid area of memory for your program will result in a segmentation fault (segfault), while attempts to access memory locations which \emph{are} valid for your program will not (at least, not directly...). When a pointer is declared, it is uninitialised, just like any other variable. This means that the value it holds will be some arbitrary number. Your program will treat this number as a memory address and, depending on what you subsequently do with the pointer, try to access that address.
+
+To eliminate problems with pointers to arbitrary addresses, you should \textbf{always} initialise a pointer. If you already have the object you want it to point to, use the address-of operator to initialise your pointer:
+\begin{verbatim}
+double h = 6.63e-34;
+double* hptr = &h;
+\end{verbatim}
+
+If you don't have the object yet, initialise the pointer to 0. You should always check that a pointer is not equal to 0 (a so-called \emph{null pointer}) before using it:
+\begin{verbatim}
+double* my_ptr = 0;
+
+// some other code which may or 
+// may not set my_ptr goes here
+
+if ( my_ptr )
+{
+  std::cout << *my_ptr << "\n";
+}
+\end{verbatim}
+
+Finally, if you're allocating memory for an object or array using \texttt{new}, you should initialise the pointer directly with the result of \texttt{new}:
+\begin{verbatim}
+int n_elements = 5;
+double* my_array = new int[n_elements];
+
+// code to use the array
+// would go here
+
+delete[] my_array;
+\end{verbatim}
+Note that the \verb|delete[]| statement was called to free the memory we allocated with \verb|new[]| earlier!
+
+\section{Arrays vs. Pointers}
+There is a difference between arrays and pointers. For example, the statement
+\begin{verbatim}
+char word[] = "Hello";
+\end{verbatim}
+
+produces an array containing the characters of the C-style string, like so:
+
+\begin{tikzpicture}
+\foreach \c / \p in {H/0,e/1,l/2,l/3,o/4,$\backslash 0$/5}
+{
+\draw (\p,0) rectangle ++(1,1);
+\draw (\p,0) +(0.5,0.5) node {\Large \c};
+}
+\end{tikzpicture}
+
+If, instead, you said:
+\begin{verbatim}
+char* word = "Hello";
+\end{verbatim}
+You get a pointer to an array containing those characters:
+
+\begin{tikzpicture}
+\draw (0,0) rectangle ++(1,1);
+\fill[black] (0,0) +(0.5,0.5) circle (0.25);
+\draw[->, very thick] (0.5,0.5) -- (2,0.5);
+\foreach \c / \p in {H/2,e/3,l/4,l/5,o/6,$\backslash 0$/7}
+{
+\draw (\p,0) rectangle ++(1,1);
+\draw (\p,0) +(0.5,0.5) node {\Large \c};
+}
+\end{tikzpicture}
+
+A statement like \verb|x[3]| generates different code depending on whether \verb|x| is a pointer or an array. If it is an array, the correct behaviour is to go to the first element, count forward $3$ elements, then access whatever is found there. If it is a pointer, the correct behaviour is to find the value of the pointer (the memory location of the start of the array), add $3$ to it, then dereference the resulting pointer and access whatever is there. In both of the cases above, it is the letter \verb|l|, but the way in which it is fetched differs!
+
+Arrays \emph{decay} into pointers when used in expressions, so \verb|x[i]| is identical to \verb|*((x)+(i))| regardless of whether \verb|x| is a pointer or an array. In this way, you can pass an array into a function expecting a pointer, and index it inside the function as though it was the original array. Note again that you will need to pass in the \emph{size} of the array too, since it is no longer known (the array size is part of the array type, but not part of the pointer type into which it decays). Don't worry too much about this for now; the point is just to illustrate that passing arrays into functions that expect pointers works more or less as you expect.
+
+The array name is not, strictly speaking, a ``pointer to its first element'', it is a name for the entire array, of a type which includes the size, e.g.
+\begin{verbatim}
+int primes[3]; // has type int[3]
+\end{verbatim}
+
+It can be used as though it was a pointer to the first element precisely because an array decays, as explained above, into a pointer to the first element when used in expressions. While the array has type \verb|int[3]|, the pointer has type \verb|int*| and knows nothing of its size.
+
+For more information on the differences between arrays and pointers, see \url{http://www.lysator.liu.se/c/c-faq/c-2.html}.
+
+\section{\texttt{new}, \texttt{delete}, \texttt{new[]} and \texttt{delete[]}}
+When creating objects using \verb|new|, you are creating them on the \emph{heap} rather than on the \emph{stack}. These objects persist beyond the scope in which they were made, and must be \verb|delete|d once you're done with them. The following creates a new integer on the heap:
+\begin{verbatim}
+int* x = new int;
+\end{verbatim}
+
+You can also create arrays on the heap. The advantage is that you can specify the size at runtime:
+\begin{verbatim}
+std::cout << "How many numbers do you have?" << std::endl;
+int size;
+std::cin >> size;
+int* x = new int[size];
+\end{verbatim}
+
+If you create an array on the heap, using \verb|new[]|, you \textbf{must} delete it using \verb|delete[]| instead of \verb|delete|. You don't have to specify the size when deleting:
+\begin{verbatim}
+int* x = new int;
+*x = 3;
+delete x;
+
+int* y = new int[3];
+y[0] = y[1] = y[2] = 0;
+delete[] y;
+\end{verbatim}
+
+The \verb|int* y = new int[3]| statement in the code above results in the following structure in memory:
+
+\begin{tikzpicture}
+	\draw (0,0) rectangle ++(1,1);
+	\fill[black] (0,0) +(0.5,0.5) circle (0.25);
+	\draw[->, very thick] (0.5,0.5) -- (2,0.5);
+		\draw (2,0) rectangle ++(1,1);
+		\draw (3,0) rectangle ++(1,1);
+		\draw (4,0) rectangle ++(1,1);
+\end{tikzpicture}
+
+
+You can also make (arbitrarily shaped) multidimensional arrays:
+\begin{verbatim}
+// make array of four pointers to int
+int** x = new int*[4];
+for(int i = 0; i < 3; ++i)
+{
+  // make array of i ints
+  x[i] = new int[i+1];
+}
+\end{verbatim}
+
+The code above results in an array of four pointers, each of which points to an array of integers with 1, 2, 3 and 4 elements, respectively:
+
+\begin{tikzpicture}
+	\draw (0,0) rectangle ++(1,1);
+	\fill[black] (0,0) +(0.5,0.5) circle (0.25);
+	\draw[->, very thick] (0.5,0.5) -- (6,0.5);
+		\draw (6,0) rectangle ++(1,1);
+		\draw (7,0) rectangle ++(1,1);
+		\draw (8,0) rectangle ++(1,1);
+		\draw (9,0) rectangle ++(1,1);
+
+
+	\draw (0,1) rectangle ++(1,1);
+	\fill[black] (0,1) +(0.5,0.5) circle (0.25);
+	\draw[->, very thick] (0.5,1.5) -- (2,1.5);
+		\draw (2,1) rectangle ++(1,1);
+		\draw (3,1) rectangle ++(1,1);
+		\draw (4,1) rectangle ++(1,1);
+
+	\draw (0,2) rectangle ++(1,1);
+	\fill[black] (0,2) +(0.5,0.5) circle (0.25);
+	\draw[->, very thick] (0.5,2.5) -- (7,2.5);
+		\draw (7,2) rectangle ++(1,1);
+		\draw (8,2) rectangle ++(1,1);
+
+	\draw (0,3) rectangle ++(1,1);
+	\fill[black] (0,3) +(0.5,0.5) circle (0.25);
+	\draw[->, very thick] (0.5,3.5) -- (2,3.5);
+		\draw (2,3) rectangle ++(1,1);
+\end{tikzpicture}
+
+The spacing in the picture above is supposed to represent the fact that these individual arrays will be placed arbitrarily in memory, so you cannot rely on them being next to each other!
+
+\subsection{Storage duration}
+Actually, when I said that objects allocated through \verb|new| or \verb|new[]| are created on the \emph{heap}, this refers to an implementation detail; the memory areas used to store variables in your program are usually called the \emph{stack} and \emph{heap} due to the way they are implemented, but this is not necessarily always the case.
+
+What \emph{is} always the case is that local objects such as variables declared as normal inside a function, function arguments, etc. have what we call \emph{automatic storage duration}. When the function that encloses them ends, the variables \emph{go out of scope} and are destroyed. Variables with automatic storage duration are often called \emph{stack variables} due to the fact that they are (usually) given space on the function call stack of a program.
+
+The memory you allocate through \verb|new| or \verb|new[]| has what is called \emph{dynamic storage duration}; they come into being when you allocate them, and don't get destroyed until you use \verb|delete| or \verb|delete[]| (as appropriate) on them. Variables with dynamic storage duration are often called \emph{heap variables} because of the way the areas of memory used by \verb|new| and \verb|new[]| are managed, often using data structures known as heaps.
+
+There is a third kind of storage duration: \emph{static storage duration}. Variables of this type exist for the entire run-time of the program. Global variables (which should never be used) have static storage duration, as do variables explicitly labelled \verb|static| in functions or other local contexts. You'll probably see static class member variables in day 3.
+
+Saying \emph{stack} or \emph{heap} in the context of the type of variable you're talking about will make you understood, but it's more correct to talk of \emph{automatic} or \emph{dynamic} storage duration; the C++ standard has no concept of \emph{stack} or \emph{heap} in this way, but it does define the lifetimes of objects with \emph{static}, \emph{automatic} or \emph{dynamic} storage duration!
+
+\section{\texttt{while} vs. \texttt{do \ldots\ while}}
+The \verb|while| construct will test a condition then run a loop body while that condition is true. If you want to run once regardless, then check the condition, you can use \verb|do ... while|. This looks like:
+
+\begin{verbatim}
+int x = 10;
+do {
+  std::cout << x << " green bottles, hanging on the wall...\n";
+  --x;
+} while ( x > 0 );
+\end{verbatim}
+
+This is useful sometimes where you want to do something (like, read input) then check if it worked and if not, do it again. It's also useful for sort algorithms where you want to run through the array once, and then if a swap occurred, run through again. You always want to go through at least once, so a \verb|do ... while| loop lets you do this without having to test a condition, or use \verb|while( true )|.
+
+\section{References}
+References are not the same as pointers. A reference is \emph{intrinsically const} in that, once initialised, it cannot be changed to refer to another object. This is not the same as the object itself being const, though---you can still change an object through a reference. Let's illustrate this with some code demonstrating the use of a reference and an equivalent pointer.
+
+\begin{verbatim}
+int a = 4;
+
+int* b = &a; // b points to a
+*b = 2; // a now has value 2
+
+int& c = a; // c is a reference to a
+c = 3; // a now has value 3
+
+int d = 6;
+b = &d; // b now points to d
+
+c = d; // a now has the value 6
+\end{verbatim}
+
+Note that in the last line, where we say \verb|c = d| we are assigning the value in \verb|d| to the object referred to by \verb|c|, in other words we're assigning a value to \verb|a|. We cannot change what \verb|c| refers to, but we can change what \verb|b| points at---we did so when we set it to the address of \verb|d|.
+
+Once a reference has been initialised, it acts exactly like the original object. You don't need to ``dereference'' like you would with a pointer, and you can't make it refer to something else. It really is just another name for the same object. It is, however, possible to make a \emph{reference-to-const} which refers to an object which was not originally const. In this way, you cannot change the value through the reference, even though you can through the original object:
+
+\begin{verbatim}
+int a = 4;
+a = 6; // allowed, non-const object
+
+const int& b = a; // b is a reference to const a
+b = 2; // Compiler error - cannot assign to a const object!
+\end{verbatim}
+
+In this way, you can pass objects into functions by \emph{const reference}, avoiding a copy of the object (which would otherwise happen if you passed by value), but protecting against changes to the original object. In fact, almost all function arguments should be \emph{reference-to-const} in a well-written C++ program!
+
+\section{Initialising vs. Assigning}
+When a variable is created (i.e. at the point its type is specified) you can \emph{initialise} it. The syntax for this takes two forms (for built-in types):
+\begin{verbatim}
+int i = 3;
+int j(3);
+\end{verbatim}
+
+Both of these are equivalent. Note, however, that if the object being initialised is not a built-in type and a constructor must be called, only the second form is valid.
+
+When you \emph{assign} a value to a variable, at some point after its initialisation, you don't specify the type, and you can only use the \verb|=| operator (or variants thereof):
+\begin{verbatim}
+int i(3); // initialise to 3
+i = 5; // set i to 5
+i += 2; // add 2 to the contents of i
+\end{verbatim}
+
+\section{Shared Libraries}
+Shared libraries are files containing code which may be shared between multiple executable programs. The precise mechanism by which this occurs varies between operating systems, but the general idea is that the code is compiled in such a way that all memory addresses are defined as offsets. When a specific executable loads a shared library, the dynamic linker will compute the actual memory address from the address where it was loaded and the offsets given by the library.
+
+This approach to code sharing has a number of advantages over static libraries. The first is that if the code inside the dynamic (shared) library changes, provided the interface remains the same, your executable will not need to be recompiled (generally... there may be exceptions to this). Programs which make use of shared libraries don't include the code in their own executable, so the executable is typically smaller, and the shared code is represented only once on disk and in memory. This allows you to save space for other things (less important these days with terabyte hard drives and multiple gigabytes of main memory, but still a good reason for using shared libraries).
+
+\subsection{Compiling a shared library}
+To compile code into a shared library, you must compile each object file using the \verb|-fPIC| compiler flag (Position-Independent Code), then compile the whole lot into a shared library with the command
+\begin{verbatim}
+g++ -shared -fPIC -o libFoo.so Foo.o
+\end{verbatim}
+
+\subsection{\texttt{\$LD\_LIBRARY\_PATH} and related issues}
+You may have noticed that when you run programs which are linked against a shared library, if the library is not in one of the default system locations, it will not be found until you tell the dynamic link loader where to look. The \verb|$LD_LIBRARY_PATH| environment variable gives you control over this, and you will need to add the directory containing the \verb|.so| file to it:
+\begin{verbatim}
+# bash
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.
+
+# tcsh
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:.
+\end{verbatim}
+
+The above commands add the current working directory (whatever that is at the time that you run the executable) to your \verb|$LD_LIBRARY_PATH| environment variable. This will work if you're always running your program from the directory which contains the shared library, but if not you can specify an absolute path in the environment variable,
+\begin{verbatim}
+# bash
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/epp/phrebd/usr/lib/
+\end{verbatim}
+
+The alternative is to hard-code a library search path into your executable when you compile it. Here's an example which compiles against a library in \verb|/home/epp/phrebd/lib| and tells the executable to keep looking there for the library, regardless of the content of \verb|$LD_LIBRARY_PATH|.
+\begin{verbatim}
+g++ -o myprogram myprogram.cpp -L/home/epp/phrebd/lib \
+ -Wl,-rpath=/home/epp/phrebd/lib -lFoo
+\end{verbatim}
+
+The \verb|-Wl,-rpath=| part consists of two bits. First, the \verb|-Wl| tells the compiler that the thing following the comma is an argument which should be passed to the linker. Second, the \verb|-rpath=| part is a linker flag which tells it to embed a hard-coded library search path into the resulting executable.
+
+When you compile code using the above mechanism, you'll be able to run it from any location, regardless of the settings of \verb|$LD_LIBRARY_PATH| and it will find the library it requires (provided the library is actually located in the place you told it to look!)
+
+\section{Sorting}
+The homework for day 2 involves sorting an array. Wikipedia contains a lot of information about sorting algorithms; start by looking up \emph{bubble sort}, then try \emph{quick sort}. There are many, many more algorithms, and often pseudocode is provided to illustrate a possible implementation. It is usually fairly straightforward to convert this to C++, but beware of issues with array indices (C++ starts at zero) and the other usual caveats!
+
+With operations like sorting, you want to try to make things as efficient as possible. This means avoiding unnecessary temporary variables, avoiding input or output operations, and not doing any more work than you have to. Think about this when writing your sort functions, and try to keep the work done to the absolute minimum required to achieve the goal.
+
+Remember that when you pass an array into a function, you must also pass its size, and that you can use references in your \verb|swap| function.
+
+\subsection{Swapping}
+You can swap two variables in a function that takes references to them by using only a single temporary variable:
+\begin{verbatim}
+void swap(double& a, double& b)
+{
+  double tmp(a);
+  a = b;
+  b = tmp;
+}
+\end{verbatim}
+
+You could do this with pointers too:
+\begin{verbatim}
+void ptr_swap(double* a, double* b)
+{
+  double tmp(*a);
+  *a = *b;
+  *b = tmp;
+}
+\end{verbatim}
+
+but beware when calling the functions that you pass the right types:
+\begin{verbatim}
+int first = 10;
+int second = 42;
+swap(first, second); // pass by reference
+std::cout << first << ", " << second << "\n";
+ptr_swap(&first, &second); // pass by ptr
+std::cout << first << ", " << second << "\n";
+\end{verbatim}
+
+The output of the above program is:
+\begin{verbatim}
+42, 10
+10, 42
+\end{verbatim}
+
+Note that you have to use the address-of operator to pass pointers to the doubles in the second swap, which is why pass-by-reference is preferred; it makes the whole thing more transparent to the user!
+
+\end{document}

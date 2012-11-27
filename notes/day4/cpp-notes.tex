@@ -1,0 +1,1063 @@
+\documentclass[a4paper]{scrartcl}
+
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath,amssymb}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+
+\usepackage{tikz}
+
+\usepackage[pdftex, colorlinks]{hyperref}
+\usepackage[figure, table]{hypcap} % Fix a problem with hyperref
+\hypersetup{
+    bookmarksnumbered,
+    pdfstartview={Fit},
+    citecolor={black},
+    linkcolor={black},
+    urlcolor={black},
+    pdfpagemode={UseOutlines}
+}
+
+% Make hyperlinks jump to the right place
+\makeatletter
+\newcommand\org@hypertarget{}
+\let\org@hypertarget\hypertarget
+\renewcommand\hypertarget[2]{%
+\Hy@raisedlink{\org@hypertarget{#1}{}}#2%
+} \makeatother
+
+% Space between paragraphs, rather than indented paragraphs
+\parindent 0pt
+\parskip 1ex
+
+% Bibliography style
+%\bibliographystyle{unsrtnat} % `Plain' unsrtnat.bst
+\bibliographystyle{ajbunsrtnat} % Modified unsrtnat.bst to make article titles emphasized
+
+\title{Computing Course Day 4\\
+Notes \& Discussion\\
+Second Edition}
+\author{Andrew J. Bennieston}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\pagebreak
+
+\section{Introduction}\label{sec:introduction}
+This document is a set of notes expanding on some of the content of day four of the 2010 and 2011 C++ course. Many of the things discussed here stem from questions or comments during the day itself, while others exist as extension material.
+
+\section{Streams}\label{sec:streams}
+It is possible to fill entire books with information about C++ I/O streams\footnote{See, for instance, reference\cite{IOStreams}}. I'll avoid doing that here. What I will do is cover some of the common problems encountered when dealing with I/O in C++.
+
+\subsection{File streams}
+In order to use the standard file streams, you will need to include the header \verb|<fstream>|.
+
+\subsubsection{Opening files}
+There are two ``basic'' ways to open a file. The first is to construct an \verb|std::ifstream| or \verb|std::ofstream| object (depending on whether you want to read from the file, or write to it) with a filename (as a \verb|const char*|):
+\begin{verbatim}
+const char* filename = "myFile.dat";
+std::ifstream inputFile(filename);
+\end{verbatim}
+
+The second way is to default-construct an \verb|std::ifstream| or \verb|std::ofstream| object, then call the \verb|open()| method:
+\begin{verbatim}
+std::ofstream log;
+const char* filename;
+
+if ( someCondition )
+  filename = "log1.out";
+else
+  filename = "log2.out";
+
+log.open(filename);
+\end{verbatim}
+
+Note that this method allows you to create the file in the current scope while opening it with a name which is determined in some inner scope. This is potentially useful if you want to call a file something different, based on some logic within the program. The alternative would be to do something like:
+\begin{verbatim}
+std::ostream* log;
+if ( someCondition )
+  log = new std::ofstream("log1.out");
+else
+  log = new std::ofstream("log2.out");
+// more code here
+delete log; // remember to free memory!
+\end{verbatim}
+
+This has two major disadvantages; firstly, you have to use pointer semantics when dealing with the stream, and secondly you have to remember to delete the object when you're done with it.
+
+However you choose to open files, you should \emph{always} check that the operation succeeded. There could be any number of reasons that the system may fail to open a file; perhaps it is not there, or you don't have permission to access it...
+
+In order to check whether the file was opened successfully, you can do something like:
+\begin{verbatim}
+std::ofstream log("log.out");
+if ( ! log.is_open() )
+{
+  // Something went wrong. Deal with it, somehow.
+}
+\end{verbatim}
+Where the code corresponding to ``deal with it, somehow'' will depend on the context of your program; it could display a warning and exit, it could throw an exception, it could try to recover silently, or it could do something else altogether!
+
+\subsubsection{Closing files}
+Files are closed automatically when the \verb|fstream| object goes out of scope or is deleted. To manually close a file stream, call the \verb|close()| method:
+\begin{verbatim}
+std::ofstream log("log.out");
+log << "Hello, log world!\n";
+log.close();
+\end{verbatim}
+
+The example above also shows how one can use file streams, i.e. identically to any other kind of C++ stream!
+
+\subsubsection{Reading lines \& dealing with end-of-file}
+When reading from \verb|std::ifstream| objects, it is quite possible that one will eventually hit the end of the file. When this happens, C++ sets a boolean flag which can be queried using the \verb|eof()| member function. \verb|eof()| returns true if the end of the file has been seen. The only problem here is that \verb|eof()| is not set until after the program encounters the end of the file. This can result in the last line of the file being processed twice if one checks for \verb|eof()| before reading, then processes the data. The solution is to try a read, then see whether it succeeded - if \verb|in.eof()| is true, or equivalently \verb|in.good()| returns false (for an \verb|ifstream| called \verb|in|), then the end of file was encountered and you can proceed accordingly. For example, the program below reads lines from a file and prints them to the screen. The first version prints the last line twice, while the second version behaves correctly.
+
+\begin{verbatim}
+// bad_read.cpp
+#include <fstream>
+#include <iostream>
+#include <string>
+
+int main(int argc, char** argv)
+{
+  // Check for correct arguments
+  if ( argc != 2 )
+  {
+    std::cerr << "Usage: " << argv[0] << " filename\n";
+    return 1;
+  }
+
+  // Open the file and test for failure
+  std::ifstream in(argv[1]);
+  if ( ! in.is_open() )
+  {
+    std::cerr << "Could not open file: " << argv[1] << "\n";
+    return 1;
+  }
+
+  // Read lines into a string and print them
+  std::string line;
+  while ( ! in.eof() )
+  {
+    std::getline(in, line);
+    std::cout << line << "\n";
+  }
+  in.close();
+  
+  return 0;
+}
+\end{verbatim}
+
+\begin{verbatim}
+// good_read.cpp
+#include <fstream>
+#include <iostream>
+#include <string>
+
+int main(int argc, char** argv)
+{
+  // Check for correct arguments
+  if ( argc != 2 )
+  {
+    std::cerr << "Usage: " << argv[0] << " filename\n";
+    return 1;
+  }
+
+  // Open the file and test for failure
+  std::ifstream in(argv[1]);
+  if ( ! in.is_open() )
+  {
+    std::cerr << "Could not open file: " << argv[1] << "\n";
+    return 1;
+  }
+
+  // Read lines into a string and print them
+  std::string line;
+  while ( true )
+  {
+    std::getline(in, line);
+    if ( in.eof() )
+      break;
+    std::cout << line << "\n";
+  }
+  in.close();
+
+  return 0;
+}
+\end{verbatim}
+
+In this case, the most likely result is that an empty final line is printed by the first version, which would not appear in the original file. The second version will just output the text as per the original file.
+
+\subsection{String streams}
+String streams provide streaming operations for strings; in other words, they do exactly what they say they do! To see why this is useful, consider the case where you have some command-line argument you want to use as an integer. One way to convert from a \verb|const char*| to an \verb|int| is to use the \verb|atoi()| function. Arguably a better, more C++ way, is to use string streams. You'll need the \verb|<sstream>| header.
+\begin{verbatim}
+#include <sstream>
+
+int main(int argc, char** argv)
+{
+  std::string argument(argv[1]);
+  std::istringstream in(argument);
+  int nEvents;
+  in >> nEvents;
+  for(int i = 0; i < nEvents; ++i)
+    // ...
+}
+\end{verbatim}
+
+Here, we construct an \verb|istringstream| from a \verb|std::string| object, then use the resulting stream to read into an integer. Equivalently, if we want a string containing the current event number:
+
+\begin{verbatim}
+for(int i = 0; i < nEvents; ++i)
+{
+  std::ostringstream out;
+  out << "Event " << i << "\n";
+  std::string eventTitle = out.str();
+  // do something with the string
+}
+\end{verbatim}
+
+Here, we use an \verb|ostringstream| to make an output stream which builds a string. The \verb|str()| method of an \verb|ostringstream| returns a \verb|std::string| object representing everything that has been streamed into it.
+
+String streams are useful for conversions like those above, but my preferred method is to use the \emph{Boost} library, which is not a part of the C++ Standard. If Boost is installed, you can use \verb|boost::lexical_cast<>()| as a short-hand way of writing the first case:
+\begin{verbatim}
+#include <boost/lexical_cast.hpp>
+
+int main(int argc, char** argv)
+{
+  int nEvents = boost::lexical_cast<int>(argv[1]);
+  for(int i = 0; i < nEvents; ++i)
+    // ...
+}
+\end{verbatim}
+
+\verb|boost::lexical_cast<>()| is a template function which converts from the argument type to the template parameter type. See section \ref{sec:templates} for more on templates. The nice thing about \verb|boost::lexical_cast<>()| is that it makes the intention clear---you state that you want to convert from a string to an integer---even though it (often) uses string streams behind the scenes!
+
+\section{Compiling, linking \& distributing code}\label{sec:compiling}
+\subsection{Distributing code}
+Most software in the UNIX world is distributed in source format. This is because source compatibility across many machines and architectures is much easier than binary compatibility. You should distribute your code as a set of source files \emph{including all headers and library source} (unless the library is distributed separately), as well as some kind of build system. A \verb|Makefile| will suffice for simple projects, but for more advanced software you may want to look into some of the more flexible build systems, such as \emph{GNU Autotools}\cite{Autobook} and \emph{cmake}\footnote{\url{http://www.cmake.org/}}.
+
+Remember to distribute your complete source, and not to include binaries which, having been compiled on one system, are not likely to work elsewhere.
+
+\subsection{Static linking \& producing libraries}
+You should always be on the lookout for code which may be sufficiently reusable to make into a library. In the day 3 and day 4 exercises, one might reasonably pull out the \verb|ThreeVector|, \verb|FourVector|, \verb|Particle| and \verb|ParticleInfo| classes into a ``physics library''. Given the close coupling between these (\verb|FourVector| composes a \verb|ThreeVector| and a double, \verb|Particle| composes a \verb|FourVector| and a bunch of other things...) it doesn't make much sense to break these into \emph{multiple} libraries, but to keep them as a single library.
+
+Other object files such as those containing classes or functions for one specific program should be built from their source in the usual way and linked into a final program (remembering to link against any libraries required). Remember that the order in which you link static libraries can be important, but if you've linked libraries against their own dependencies, and built everything in the correct way, this should not be a problem except in limited circumstances.
+
+Dynamic linking is preferable to static since it allows multiple programs to share a single copy of the library, both on disk and in memory.
+
+\section{The \texttt{std::string} class}\label{sec:string}
+The \texttt{std::string} class provides improved support for text strings over the C string (\texttt{char*}). It is actually a \emph{typedef} (see section \ref{sec:typedefs} for a discussion of \emph{typedef}) of a templated class (see section \ref{sec:templates} for a discussion of templates):
+\begin{verbatim}
+typedef basic_string<char> string;
+\end{verbatim}
+
+So, when you're looking for documentation on the \texttt{std::string}, you'll have to look up the class \texttt{basic\_string}. I'll spend a little time here discussing some of the features of the \texttt{std::string} which make it infinitely superior to the C string. From now on I'll use the phrases \texttt{std::string} and \texttt{string} interchangeably. Don't forget that \texttt{string} is in the \texttt{std} namespace!
+
+\subsection{Constructing \texttt{std::string} objects}
+The \texttt{std::string} class provides a number of constructors. The default constructor is
+\begin{verbatim}
+explicit basic_string(const Allocator& a = Allocator());
+\end{verbatim}
+There are two interesting points to note here; firstly default constructors can take \emph{optional} arguments! A function argument is optional if a default value is provided, as was done here. Don't worry about what the allocator stuff means, it's not important right now. A default constructor is something which can be called without passing any arguments to it. By providing a default value for the allocator argument \texttt{a}, this constructor will work as a default constructor.
+
+The second thing to note is the keyword \texttt{explicit} in front of the constructor. Because this constructor takes a single argument, it could in principle be used for \emph{type conversion}. That is, if we have an object of type \texttt{Allocator}, and something expects it to be a \texttt{basic\_string}, this constructor would ordinarily provide a type conversion from \texttt{Allocator} to \texttt{basic\_string}. In general, this is a \emph{very bad thing} and should be avoided. The \texttt{explicit} keyword tells the compiler that this constructor must not be called implicitly, e.g. for type conversions, and can only be called when explicitly requested; i.e. when the user constructs an \texttt{std::string} object. It is a good idea to make all single-argument constructors \texttt{explicit} so as to avoid defining unwanted type conversions.
+
+The string class provides the expected copy constructor (and the copy assignment operator). I won't discuss these further.
+
+There are also some more interesting constructors. The one below constructs a string from another string object, taking the sub-string beginning at position \texttt{pos}, up to a maximum of \texttt{n} characters (where \texttt{n} takes the default value \texttt{npos}, which is a special value defined in the string class meaning ``the end of the string''):
+\begin{verbatim}
+basic_string(const basic_string& str, size_type pos,
+  size_type n = npos, const Allocator& a = Allocator());
+\end{verbatim}
+This constructor lets you quickly make one string which contains a substring of another.
+
+There are two constructors which take \texttt{char*} arguments, allowing you to make a string from a C string:
+\begin{verbatim}
+basic_string(const char* s, size_type n,
+  const Allocator& a = Allocator());
+
+basic_string(const char* s,
+  const Allocator& a = Allocator());
+\end{verbatim}
+The first makes a string from the first \texttt{n} characters of \texttt{s}, while the second makes a string from all the characters in \texttt{s} up to but not including a \texttt{traits::eos()} character. \texttt{traits::eos()} usually means a null character, \texttt{`\textbackslash 0'}. The reason for the traits class is to allow the behaviour of the string class to be altered by changing the traits class. This is a concept known as \emph{policy-based design} and will not be covered in detail here.
+
+Another constructor allows us to make a string containing \texttt{n} copies of a character \texttt{c}:
+\begin{verbatim}
+basic_string(size_type n, char c,
+  const Allocator& a = Allocator());
+\end{verbatim}
+
+Finally, there exists a constructor for the \texttt{std::string} which takes a pair of iterators as arguments. This allows strings to be constructed from any iterable sequence (including streams!) whose element type is \texttt{char}:
+\begin{verbatim}
+template<class InputIterator>
+basic_string(InputIterator start,
+  InputIterator end,
+  const Allocator& a = Allocator());
+\end{verbatim}
+This allows us, for example, to construct a string from characters on an input stream by doing something like:
+\begin{verbatim}
+std::string bob(std::istream_iterator<char>(std::cin),
+  std::istream_iterator<char>());
+\end{verbatim}
+Don't worry too much about \texttt{istream\_iterator} for now. You'll find a lot of information about stream iterators in a good book on the standard library (e.g.\cite{StandardLibrary}).
+\subsection{Operators}
+The string class provides the expected copy assignment operator, as well as assignment operators allowing one to assign a \texttt{char*} or a \texttt{char} to a string object:
+\begin{verbatim}
+basic_string& operator=(const basic_string& str);
+basic_string& operator=(const char* s);
+basic_string& operator=(char c);
+\end{verbatim}
+
+There are also two versions of the subscript operator, allowing you to access characters in the string as though they were elements in an array. The first is called when you're working with a \emph{const} string, the second in all other cases:
+\begin{verbatim}
+const char& operator[](size_type pos) const;
+char& operator[](size_type pos);
+\end{verbatim}
+
+Finally, there are three ``addition with assignment'' operators:
+\begin{verbatim}
+basic_string& operator+=(const basic_string& s);
+basic_string& operator+=(const char* s);
+basic_string& operator+=(char c);
+\end{verbatim}
+These allow us to append text to an existing string, either by adding another string, a C string, or a single character.
+
+\subsection{Iterators}
+The \texttt{std::string} class provides the usual \texttt{begin(), end(), rbegin(), rend()} members, which return the relevant iterator. The versions beginning with \texttt{r} provide \emph{reverse iterators}, allowing you to iterate \emph{backwards} over the collection. See section \ref{sec:iter} for more details.
+
+\subsection{Selected member functions}
+The string class has quite a few member functions, so I'm going to discuss only a few of the more useful ones here.
+
+\subsubsection{\texttt{erase()}}
+Three forms of \texttt{erase()} are provided:
+\begin{verbatim}
+basic_string& erase(size_type pos = 0, size_type n = npos);
+iterator erase(iterator p);
+iterator erase(iterator start, iterator finish);
+\end{verbatim}
+The first can be called with no arguments (allowing the default values to be used) to clear a string completely. It removes at most \texttt{n} characters from the string, starting at position \texttt{pos}.
+
+The second erases the single element pointed to by the iterator \texttt{p}, while the third removes elements in the range \texttt{[start, finish)} i.e. from \texttt{start} (inclusive) up to but not including \texttt{finish}.
+
+\subsubsection{The \texttt{find()} family of functions}
+There are a number of member functions for finding things in the string. The first set look for one string in another, with the search string specified in a number of ways (another \texttt{std::string}, a C string or a single character):
+\begin{verbatim}
+size_type find(const std::string& str, size_type pos = 0) const;
+size_type find(const char* s, size_type pos, size_type n) const;
+size_type find(const char* s, size_type pos = 0) const;
+size_type find(char c, size_type pos = 0) const;
+\end{verbatim}
+
+There are also several functions for finding the positions of characters within a string, having names of the form \texttt{find\_first\_of()}, \texttt{find\_last\_of()}, \texttt{find\_first\_not\_of()} and \texttt{find\_last\_not\_of()}. These look for the first or last character which matches or doesn't match one of the characters in the search string. Again, they take \texttt{std::string}, \texttt{char*} or \texttt{char} arguments. These can be used to find, for example, the first non-whitespace element in a string. The code below takes a string which may have whitespace to the left and right, and returns a string which has no whitespace surrounding it.
+\begin{verbatim}
+std::string trim(const std::string& str)
+{
+  std::string::size_type p = str.find_first_not_of(" \t\r\n");
+  std::string::size_type q = str.find_last_not_of(" \t\r\n");
+  return str.substr(p, q - p + 1);
+}
+\end{verbatim}
+I've also used the \texttt{substr()} function to extract a substring, which I'll describe in more detail later.
+
+In addition, there is an \texttt{rfind()} function, which does the same as \texttt{find()} but from the end of the string.
+
+\subsubsection{\texttt{length()} and \texttt{size()}}
+The \texttt{length()} and \texttt{size()} member functions both return the number of elements in the string.
+
+\subsubsection{Substrings}
+The \texttt{substr()} function returns a string object constructed from a portion of the original string.
+\begin{verbatim}
+basic_string substr(size_type pos = 0, size_type n = npos) const;
+\end{verbatim}
+The new string contains \texttt{n} characters from the original, starting at \texttt{pos} (or from \texttt{pos} to the end of the string, if \texttt{n} is more than the number of characters remaining between \texttt{pos} and the end).
+
+\subsubsection{\texttt{c\_str()} and \texttt{data()}}
+The member function \texttt{c\_str()} returns a pointer to a null-terminated character array representing the string. This can be used whenever you need to give some interface a C string (\texttt{char*}), for example in the constructors of \texttt{fstream} objects. If the string is modified after a call to \texttt{c\_str()}, the pointer may no longer be valid, so be sure to use \texttt{myString.c\_str()} each time, rather than storing the pointer returned by it and using that!
+
+The \texttt{data()} function returns a pointer to the array of characters used internally by the string. This will not be null-terminated (since the string keeps track of its length in another member variable, and in principle a string object can hold text containing `\textbackslash 0' characters).
+
+\subsection{Nonmember operators}
+A selection of free (non-member) operators exist for dealing with string objects. For example, one can add two strings together, so \texttt{operator+} is defined. Interesting ones include \texttt{operator==} and \texttt{operator!=} for string comparison, as well as \texttt{operator<}, which allows string objects to be used as the key type in a \texttt{std::map} container (more on this in the discussion of maps in section \ref{sec:containers_associative}).
+
+Finally, the streaming operators \verb|operator<<| and \verb|operator>>| are defined so that strings can be printed and read into in the same way as the built-in types (\texttt{int}, \texttt{float}, etc.)
+
+\subsection{\texttt{getline()}}
+There is a final free function associated with the string class. This provides \emph{unformatted input} from an \texttt{std::istream} to a \texttt{std::string}:
+\begin{verbatim}
+std::istream& getline(std::istream& is, std::string& str);
+std::istream& getline(std::istream& is, std::string& str, char delim)
+\end{verbatim}
+It lets you read a line from a file into a string, for example:
+\begin{verbatim}
+std::string myline;
+std::ifstream file("myfile.txt");
+std::getline(file, myline);
+\end{verbatim}
+The second form allows you to specify the delimiter at which it stops reading; this is useful for reading fields separated by tabs, colons, etc. into separate strings.
+
+\section{Typedefs}\label{sec:typedefs}
+A \verb|typedef| provides an \emph{alias} for a typename. Consider the example below:
+
+\begin{verbatim}
+typedef std::string str;
+str a = "Hello";
+\end{verbatim}
+
+It is important to note that a typedef \emph{does not} introduce a new type; it just provides another name for an existing type. Given the above typedef, you could pass \verb|str| objects to a function which expects a \verb|std::string| (and vice versa). Typedefs provide a method for shortening long typenames (which can often result from the use of templates (section \ref{sec:templates}) or standard library containers (section \ref{sec:containers}). They also, in the case of containers, allow you to express the types held or used by the container in a consistent manner (for example \verb|std::vector<T>::size_type| which is a typedef to an integer type whose range is big enough to hold the maximum possible size of a vector of \verb|T| (\verb|T| is an arbitrary type) and \verb|std::vector<T>::value_type| which is a typedef to the type \verb|T| itself.
+
+Beware of over-using typedefs; usually it is helpful to know the complete, true type of an object; hiding too much information in typedefs is considered bad form. They do become very useful when you're dealing with otherwise very long typenames, especially when you have iterator types, or when you're trying to emulate standard library containers. More on this later.
+
+\section{Containers}\label{sec:containers}
+The C++ standard library provides two categories of container; \emph{sequence} containers (section \ref{sec:containers_sequence}) and \emph{associative} containers (section \ref{sec:containers_associative}).
+
+The containers are actually \emph{template} classes; the type of element they hold is determined by the template parameters, so the class \verb|std::vector<int>| is different from the class \verb|std::vector<float>|. In this way, the standard containers can hold objects of types that the library doesn't know about in advance (i.e. objects of user-defined classes), provided they meet some minimal requirements:
+\begin{itemize}
+	\item Elements must be \emph{copy constructible}; that is, the type of a container element must provide a copy constructor, or be a basic (numeric) type.
+	\item Elements must be \emph{assignable}; that is, they provide the copy assignment operator (or, again, are of a basic numeric type)
+	\item Elements must be \emph{destructible}; a destructor must exist, and must not throw exceptions
+\end{itemize}
+
+Most importantly, the second point above implies that \emph{reference types cannot be used in standard library containers}.
+
+Depending on the container operations used, several other requirements may be imposed:
+\begin{itemize}
+	\item Default constructor available (resizing containers, for instance)
+	\item \verb|operator==| available (\verb|find()| algorithms, for instance)
+	\item \verb|operator<| available (ordering in associative containers)
+\end{itemize}
+
+For the purposes of this section, I will refer to the containers with generic template arguments, for instance \verb|std::vector<T>|, where the \verb|T| is taken to be a placeholder for any type name which can be used as a container element type. If more than one template argument is required, I will use \verb|T1|, \verb|T2|, etc.
+
+In the discussion that follows, I will refer to implementations of these data structures. Strictly speaking, the C++ standard does not define the implementation of its containers, but it does specify the behaviour and complexity requirements (i.e. the performance of operations on containers). These requirements tightly constrain the allowed implementations, so in practice most implementations of the standard library containers are identical, down to the level of minor variations. Certainly, the interfaces are identical; these are specified by the standard. The precise details of implementation might vary, but not by a great deal. Broadly speaking, everything I say below can be assumed to hold for just about any standard library implementation you're likely to encounter.
+
+A great deal of detail on the standard library containers can be found in\cite{StandardLibrary}.
+
+\subsection{Sequence containers}\label{sec:containers_sequence}
+The standard library defines three sequence container classes; \verb|vector|, \verb|deque| and \verb|list|. In a sequence container, elements appear sequentially, in the order in which you insert them. For example, if you append six items to a vector, they will be stored in the order in which you appended them.
+
+\subsubsection{Vectors}\label{sec:containers_sequence_vector}
+Vectors, \verb|std::vector<T>|, are random-access containers whose elements are stored in a dynamically-allocated array. Indexing is possible, and inserting (appending) elements at the end of the array is (usually) very fast. Inserting elements at the beginning, or in the middle, is much slower, since all the elements after the insertion point have to be moved to make room.
+
+Vectors are meant to replace C-style arrays, and should be preferred over arrays in virtually all cases. Since the underlying implementation almost always uses an array, it is often possible to use a vector even when something expects an array (but be careful with implementation issues and variation).
+
+\subsubsection{Deques}\label{sec:containers_sequence_deque}
+Pronounced so as to rhyme with \emph{check}, \verb|std::deque<T>| is a \emph{double-ended queue}; a dynamic array which can grow at both ends, allowing for fast insertion of elements at both the beginning and end. In practice this is usually implemented as a dynamically-allocated array where the elements start in the middle and grow outwards to both ends. Inserting elements in the middle (or, anywhere that isn't an end) still requires elements to be moved to make room.
+
+Note that because of the way a deque is implemented, it provides the \verb|push_front()| member function, not present for vectors. The standard library generally only provides operations which are reasonably fast; adding an element to the front of a vector would require every other element to be moved, which in general would be rather slow. By avoiding providing this operation, the library ensures that programmers cannot inadvertently cause bad performance. Of course, it's still possible to insert an element at the front of a vector; you just have to be a little more verbose, and usually that means you understand the implications of what you're doing!
+
+\subsubsection{Lists}\label{sec:containers_sequence_list}
+A \verb|std::list<T>| is a \emph{doubly-linked list} of elements. That is, each element has a pointer to the previous and next elements. In this way, insertion of elements \emph{anywhere in the list} can be done in \emph{constant time}! All that is required is to make a new element, then modify the pointers of the previous and next elements to point to it! The down side is that you no longer have random access; you can't immediately jump to the 10th element, but have to start at the first and go through each element in turn, asking for the next one. In this way, element access can take a lot longer if you want to get to a specific element, compared with vectors or deques.
+
+Lists are incredibly useful when you don't know in advance how many times you'll add or remove elements, and might want to do so at arbitrary places; there is no overhead due to resizing or copying elements, since one can just change a few pointers. In almost all other cases, however, you probably want to use vectors.
+
+\subsubsection{Strings and arrays}\label{sec:containers_sequence_strings_arrays}
+The C++ \verb|std::string| class is also an example of a sequence container. It is essentially a vector whose element type is \verb|char|, and provides a few additional operations common in text processing.
+
+What is perhaps less obvious is how arrays can be thought of as containers; they are basic types built into the language, rather than classes, but the standard library algorithms will generally work with arrays as well as with standard library containers. Refer to\cite{StandardLibrary} for more information on standard library algorithms.
+
+\subsection{Associative containers}\label{sec:containers_associative}
+The elements in an associative container do not remain in the order in which they were inserted. Instead, they are \emph{sorted}, based on some defined ordering criterion; usually associative containers compare the elements using \verb|operator<|, but it is possible to supply your own ordering criterion by means of a comparison function. The associative container classes have an optional template parameter (after the compulsory, element type parameters) through which one can specify the sorting criterion.
+
+The associative containers in the standard library are usually implemented as binary tree data structures. This follows from the specified complexity and behaviour of the containers.
+
+\subsubsection{Sets}\label{sec:containers_associative_set}
+A \verb|std::set<T>| is a container in which elements are sorted according to their values (through an ordering defined by \verb|operator<| or through another sorting criterion). Each value may be present only once, so it is not possible to have two identical elements in a set; in this way, the name stems from mathematics. Sets are collections of unique things, sorted in some way.
+
+\subsubsection{Maps}\label{sec:containers_associative_map}
+Map elements are key/value pairs; that is, the class is \verb|std::map<T1, T2>| where \verb|T1| is the key type and \verb|T2| is the value type. The elements are stored in the container sorted by the key (rather, by the value of the key, which is distinct from the value of the value... confusing, huh?) and each key can occur only once in any given map.
+
+Maps can be used as associative arrays, where one can look up the value associated with a given key:
+\begin{verbatim}
+std::map<std::string, int> countryCodes;
+countryCodes["UK"] = 44;
+countryCodes["US"] = 1;
+std::cout << countryCodes["UK"] << std::endl;
+\end{verbatim}
+
+Note that the \verb|std::map| does not provide \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| method, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
+
+\begin{verbatim}
+typedef std::map<std::string, int> CodeMap;
+std::string getCountryByCode(const CodeMap& map, const int code)
+{
+  CodeMap::iterator i = map.find(code);
+  if ( i != map.end() )
+    return i->second;
+  else return "";
+}
+\end{verbatim}
+
+\subsubsection{Multisets and multimaps}\label{sec:containers_associative_multi}
+As for sets and maps, but now duplicate elements are allowed.
+
+\subsection{Nested typedefs}
+Standard library containers provide \emph{nested typedefs} (i.e. typedefs within the scope of the (template) class). These allow you to obtain types such as that used to store the size of the container, or the type of value which the container holds. You'll probably have seen the \verb|size_type| typedef already. In a standard library container, \verb|size_type| is a typedef to an integer type guaranteed to be big enough to represent the maximum possible size of the container. When you write a manual loop over a container, the index should use this type:
+
+\begin{verbatim}
+std::vector<int> myVec;
+
+// Not a loop over the vector
+// we're just pushing elements onto it
+for(int i = 0; i < 200; ++i)
+  myVec.push_back(i);
+
+// This is a loop over the vector
+// so we use its size_type
+std::vector<int>::size_type i = 0;
+std::vector<int>::size_type size = myVec.size();
+for(/*already initialised*/; i < size; ++i)
+{
+  std::cout << myVec.at(i) << std::endl;
+}
+\end{verbatim}
+
+Note, however, that this is a good candidate for using iterators (which are also nested typedefs). See section \ref{sec:iter} for more on iterators.
+
+The sequence containers have a \verb|value_type| typedef, which represents the type stored in the container, and the associative containers have a \verb|key_type| typedef too:
+
+\begin{verbatim}
+typedef std::map<int, std::string> MyMapType;
+MyMapType someMap;
+someMap[1] = "one";
+someMap[2] = "two";
+
+// later...
+
+MyMapType::key_type first_key = (someMap.begin())->first;
+MyMapType::value_type first_value = (someMap.begin())->second;
+\end{verbatim}
+
+\subsection{On the size and capacity of \texttt{std::vector}}
+In a typical use case for the \verb|std::vector<T>| container, you might create an empty vector, then push elements onto it using \verb|push_back()| using some kind of loop to generate values:
+
+\begin{verbatim}
+std::vector<int> myvec;
+myvec.push_back(1);
+myvec.push_back(3);
+myvec.push_back(5);
+myvec.push_back(7);
+myvec.push_back(9);
+\end{verbatim}
+
+Appending an element to a vector is usually quite a ``cheap'' operation in terms of time taken, but in cases where you know you're going to be appending multiple elements, it's a good idea to reserve space for them before you start. This is possible because a \verb|std::vector<T>| actually contains a pointer to an array of \verb|T|, allocated dynamically. The vector knows its own size (the number of elements you've stored in it), but it also has a \emph{capacity}. The capacity is the number of elements it can store in the array it dynamically allocated.
+
+Vectors are somewhat smart in that, when you use \verb|push_back| to append an element, they reallocate their internal array and make sure it's big enough to hold the new element. They're typically even smarter than this, and will \emph{double} their previous capacity once you run out of space (i.e. once size $==$ capacity). Reallocations are expensive (in terms of time taken), so they should be avoided at all costs. To avoid reallocations, you can use the \verb|std::vector<T>::reserve()| member function to reserve memory before you start appending. The \verb|reserve()| member function changes a vector's capacity, but not its size (capacity is always $\ge$ size).
+
+The code below is identical to the example above, but now contains comments to describe what (probably) happens behind the scenes:
+
+\begin{verbatim}
+std::vector<int> myvec;
+// a vector is created and no space is allocated
+// size = 0, capacity = 0
+
+myvec.push_back(1);
+// an array is dynamically allocated
+// and the value 1 inserted in its 0th element
+// size = 1, capacity = 1
+
+myvec.push_back(3);
+// the array is reallocated
+// and the value 3 inserted in its 1st element
+// size = 2, capacity = 2
+
+myvec.push_back(5);
+// the array is reallocated
+// and the value 5 inserted in its 2nd element
+// size = 3, capacity = 4
+
+myvec.push_back(7);
+// the value 7 is inserted into the 3rd element
+// of the array, which is already big enough
+// size = 4, capacity = 4
+
+myvec.push_back(9);
+// the array is reallocated
+// and the value 9 inserted into its 4th element
+// size = 5, capacity = 8
+\end{verbatim}
+
+As you can see, even in this simple example, we might trigger reallocation of the array on almost every append operation. The situation gets progressively better; once the capacity is 8 we can do a further three appends before we have to reallocate, and then we get a capacity of 16, so we can do even more (that said, the reallocations take longer and longer as more data has to be moved each time). On the other hand, if we only allocate 5 elements, we've wasted the remaining space by having a capacity of 8. By using \verb|reserve()| we can tell the vector in advance how much we want to store (or, at least, a reasonable guess):
+
+\begin{verbatim}
+std::vector<int> myvc;
+// empty vector created
+// size = 0, capacity = 0
+
+myvec.reserve(5);
+// array is allocated with 5 elements
+// size = 0, capacity = 5
+
+// now, no reallocations happen in the
+// push_back operations below
+myvec.push_back(1);
+myvec.push_back(3);
+myvec.push_back(5);
+myvec.push_back(7);
+myvec.push_back(9);
+
+// but once we're here, if we push_back
+// again, we'll trigger a reallocation
+// and most likely end up with capacity = 10
+\end{verbatim}
+
+It is always a good idea to reserve space in vectors before you append to them with \verb|push_back()| or similar. If you don't know exactly how many elements you want to append, make a reasonable guess and err on the side of caution by reserving a bit more space than you're likely to need!
+
+\section{Iterators}\label{sec:iter}
+Iterators, like pointers, are a level of indirection allowing one to \emph{iterate} (navigate) over elements in a container. Any given iterator represents a position in the container. Iterators come in several flavours; notably \emph{forward iterators}, \emph{reverse iterators}, \emph{bidirectional iterators} or \emph{random access iterators}. Forward iterators step forward through a sequence when incremented, while reverse iterators step backward through the sequence when incremented. Bidirectional iterators can be incremented (to step forward) or decremented (to step backward), and random access iterators can have integer values added or subtracted. Each of these operations moves the iterator to ``point to'' the corresponding sequence element; in this way, they behave just like pointers. Forward iterators are the most used, with reverse iterators having some utility also.
+
+In analogy with pointers, one must dereference an iterator to obtain the value of the element it represents:
+\begin{verbatim}
+std::vector<int> naturals;
+naturals.push_back(1);
+naturals.push_back(2);
+naturals.push_back(3);
+naturals.push_back(4);
+std::vector<int>::iterator iter = naturals.begin();
+++iter;
+std::cout << *iter << "\n";
+// Output: 2
+\end{verbatim}
+
+As the code segment above demonstrated, standard library containers provide methods which return iterators for their elements. Containers usually provide \verb|begin()|, which returns a forward iterator to the first element, \verb|end()|, which returns a forward iterator to the ``one-past-the-end'' element, \verb|rbegin()|, which provides a reverse iterator to the last element, and \verb|rend()|, which provides a reverse iterator to the ``one-before-the-beginning'' element! In this way, to iterate over every element in a sequence, one covers the half-open range \verb|[begin(), end())|, i.e. including the first element, and not including the ``one-past-the-end'' element. A loop over each element would look something like this (assuming the same \verb|naturals| vector as in the code sample above):
+\begin{verbatim}
+std::vector<int>::iterator iter;
+std::vector<int>::iterator end = naturals.end();
+for(iter = naturals.begin(); iter != end; ++iter)
+{
+  // loop body; here just output each element
+  std::cout << *iter << "\n";
+}
+\end{verbatim}
+
+Note that I initialise the \verb|end| iterator outside of the loop, instead of having the loop written as:
+\begin{verbatim}
+for(iter = naturals.begin(); iter != naturals.end(); ++iter)
+\end{verbatim}
+
+This is to avoid a call to \verb|std::vector<int>::end()| every time through the loop! I also declare the iterator \verb|iter| outside the loop, otherwise the code would look something like:
+\begin{verbatim}
+for(std::vector<int>::iterator iter = naturals.begin();
+    iter != naturals.end(); ++iter)
+\end{verbatim}
+
+Long code lines should be avoided for aesthetic reasons, wherever possible! A typedef might also help here, but can sometimes serve to obscure the details of what is being iterated over, which is not so helpful. Note that you can also do something like:
+
+\begin{verbatim}
+for(std::vector<int>::iterator
+    iter = naturals.begin(),
+    end = naturals.end();
+    iter != end;
+    ++iter)
+\end{verbatim}
+
+Where I make use of the comma operator to initialise two iterators in the first section of the for loop. Note that you can only rely on the value of \verb|end()| being stored if your loop doesn't \emph{modify} the vector; if you add or remove elements, you invalidate the iterators and you'll have to test against the result of \verb|end()| each time through!
+
+
+Finally, you will notice that I use the \verb|++iter| prefix increment, rather than \verb|iter++| postfix form. While an iterator for the \verb|std::vector| class is (probably) just a pointer, some iterators may be objects of a complex class which may require significant memory or CPU time to construct. If we can avoid making a temporary object by using the prefix form, we should always do so!
+
+You may be wondering why iterators are more useful than pointers. The idea is that, while pointers can be used as iterators, objects of any class that behaves like a pointer can be used too. This allows one to navigate over containers with complex structure, such as lists (where elements need not be contiguous in memory) or maps (which are usually implemented as trees).
+
+\subsection{\texttt{const\_iterator}s}
+If you're iterating over a const container, you'll only be able to get \verb|const_iterator| objects. In fact, you can always use these if you don't want to be able to change the elements over which you're iterating (e.g. for output operations):
+
+\begin{verbatim}
+std::vector<int> numbers;
+for(int i = 0; i < 10; ++i)
+{
+  numbers.push_back(i);
+}
+
+std::vector<int>::const_iterator iter = numbers.begin();
+const std::vector<int>::const_iterator end = numbers.end();
+while ( iter != end )
+{
+  std::cout << *iter << std::endl;
+  ++iter;
+}
+\end{verbatim}
+
+A \verb|const_iterator| won't let you change the value it ``points'' to, just like a \verb|const int *| won't let you change the \verb|int| it points to. Note that we can still do \verb|++iter|; the iterator itself is not constant! The \verb|end| iterator, though, should never be changed, so we make this a \verb|const| \verb|const_iterator|; i.e. neither the iterator nor the value to which it points can be changed.
+
+\subsection{Iterators on \texttt{std::map}}
+When you iterate over a standard library map, the iterator points to a \verb|std::pair| object representing the key and value of that position in the map. They can be accessed as \verb|iter->first| for the key and \verb|iter->second| for the value.
+
+\subsection{Stream iterators and inserters}
+There are two special kinds of iterator that it is useful to know about. The first are \emph{stream iterators}. These iterate over input or output streams, and you saw an example in the day 4 slides for writing the contents of a \verb|std::vector| to an output stream:
+\begin{verbatim}
+std::vector<int> v;
+v.push_back(1);
+v.push_back(2);
+v.push_back(3);
+v.push_back(4);
+
+std::copy(v.begin(), v.end(),
+    std::ostream_iterator<int>(std::cout, "\n"));
+\end{verbatim}
+
+This code uses the \verb|std::copy()| algorithm to copy the elements of vector v into the output sequence defined by the \verb|std::ostream_iterator|, which writes each element to the stream provided as its first argument, separated by the character sequence given as its second argument.
+
+There is also \verb|std::istream_iterator| which takes its elements from an input stream. In the example below, we read from \verb|std::cin| until we hit the ``end of file''
+\begin{verbatim}
+#include <iostream>
+#include <iterator>
+
+int main()
+{
+    std::istream_iterator<int> input(std::cin);
+    std::istream_iterator<int> end;
+    for(; input != end; ++input)
+    {
+        int value = *input;
+        std::cout << value * value << "\n";
+    }
+    return 0;
+}
+\end{verbatim}
+
+If we run this, we get:
+\begin{verbatim}
+soulor$ echo "1 2 3 4 5" | ./istream_iter 
+1
+4
+9
+16
+25
+\end{verbatim}
+
+Of course, we could use \verb|std::copy| to copy directly from an input stream to an output stream:
+\begin{verbatim}
+std::copy(std::istream_iterator<int>(std::cin),
+    std::istream_iterator<int>(),
+    std::ostream_iterator<int>(std::cout, "\n"));
+\end{verbatim}
+
+But what if we want to implement the reverse of the first example in this section; reading elements from an input stream into a container? This is where the \verb|std::back_inserter| function comes in. It generates a \verb|std::back_insert_iterator| for the container passed as its argument. This iterator will push elements onto the back (end) of the container:
+\begin{verbatim}
+std::vector<int> v;
+std::copy(std::istream_iterator<int>(std::cin),
+    std::istream_iterator<int>(),
+    std::back_inserter(v));
+\end{verbatim}
+
+Consequently, the code above will read integers from \verb|std::cin| (until the ``end of file'') and fill a \verb|std::vector<int>| with them. You may want to \verb|reserve()| some capacity in the vector before you perform operations like this!
+
+You can use \verb|back_insert_iterator| for many other tasks; the code below creates an \verb|extend()| function, which extends one vector with the contents of another (see section \ref{sec:templates} for more details on template functions:
+\begin{verbatim}
+template<typename T>
+void extend(std::vector<T>& v1, const std::vector<T>& v2)
+{
+  std::copy(v2.begin(), v2.end(), std::back_inserter(v1));
+}
+\end{verbatim}
+
+
+\section{Templates}\label{sec:templates}
+You've already seen templates in use; the standard library containers are template classes which allow you to specify the type(s) contained as a parameter. In this section we'll explore some of the things you can do with templates, and demonstrate the power of \emph{generic programming}, one of the key concepts in C++. In the broadest sense, this is a philosophy by which you write as little code as possible, and repeat almost none of it. That is, if you can write something once in a generic way, so as to be applicable to a variety of situations, that is better than writing a version which is highly specialised to a single application.
+
+There are lots of things you can do with templates, and many subtleties with the way certain features of C++ work in the presence of templates. I only cover some of the basics below; for the rest, refer to a good book, such as\cite{Templates}.
+
+\subsection{Template functions}\label{sec:templates_functions}
+The \verb|pow()| function provided by the math library supports arbitrary real arguments $a,b$ and returns $a^b$. While this is useful in some circumstances, there is considerable overhead involved in providing this level of generality, and in many cases it is not needed. For the most part, you'll be computing integer powers of something; indeed, by far the most common operation is to square something. It is, computationally speaking, much quicker to execute \verb|x*x| than it is to execute \verb|pow(x,2)|, but we may lose some of the expressiveness; that is, making it obvious that we're squaring something. We can do better by defining a function to square doubles, and declaring it \emph{inline} so that the compiler can optimise away the function call and replace it with the code from the function:
+
+\begin{verbatim}
+inline double square(const double& x)
+{
+  return x*x;
+}
+\end{verbatim}
+
+With this function, we can square doubles by doing something like:
+\begin{verbatim}
+double a = 4;
+std::cout << square(a) << std::endl;
+\end{verbatim}
+
+This retains the expressiveness of the notation---it is clear that we mean to square $a$---and the compiler will (at its discretion) reduce the function call to the expression \verb|x*x|; a win-win situation!
+
+But we can still do better! The code above will only square doubles (or anything that can be converted to a double). We could provide a version for ints, and a version for any type we choose which has \verb|operator*| defined, but we don't need to write all that code; most of which is duplicating the same statement, and the same logic. We can write it once in a generic way, and have the compiler generate the specific code to handle a given type when we try to use it.
+
+This is the power of \emph{template functions}. By writing code such as the following, we can provide the compiler with a template, into which it substitutes the type required at compiletime:
+
+\begin{verbatim}
+template<typename T> inline T square(const T& x)
+{
+  return x*x;
+}
+\end{verbatim}
+
+We can use this either by explicitly specifying the template parameter, as we do when we tell a \verb|std::vector| what type it contains, or implicitly by allowing the compiler to \emph{deduce} the template parameter from the argument type (since the function argument is of type \verb|T|, which is a template parameter, the compiler will try to insert the type of an argument to \verb|square()| as the substitution for \verb|T|). Whenever the compiler hits code which makes use of a template function, it checks to see if it has already generated the code from the template (\emph{instantiating the template}) with that parameter substitution, and if not, generates it. This allows us to write code once and have the compiler produce a function for each type it is actually called with. Here's an example:
+
+\begin{verbatim}
+int a = 4;
+int b = square(a); // instantiates square<int>
+
+double c = 2.0;
+double d = square(c); // instantiates square<double>
+
+int x = 4;
+double y = square<double>(x);
+// instantiates square<double> even though the parameter
+// is of type int, because the parameter was provided
+// explicitly rather than being deduced from the function
+// arguments.
+
+std::string s = "Hello";
+std::string t = square(s);
+// Attempts to instantiate square<std::string>
+// which results in a compiler error because
+// std::string does not provide operator*
+\end{verbatim}
+
+In the final example, the substitution for \verb|T| to \verb|std::string| causes the compilation to fail because the \verb|std::string| class does not support multiplication, but you begin to see the power of templates. If we had a \verb|Complex| class, representing complex numbers, we could define multiplication for this using \verb|operator*| and we would not need to write a new \verb|square()| function because the template function will allow the compiler to generate one for us!
+
+Note that templates are a compile-time thing; you save on writing code, but the compiler will still generate a version of \verb|square()| for each parameter type it encounters. This can be beneficial because if you do not use \verb|square()| on a particular type, the code for it will never be created by the compiler!
+
+Template parameter deduction allows the compiler to determine the type of template parameters from the arguments to the function. This can be very useful, as you've seen in the code above, since we do not need to specify the type manually (provided it can be deduced).
+
+\subsection{Template classes}
+In the same way as for template functions, it is possible to create \emph{template classes}. The standard library includes many of these, but we'll look at a simple example; converting the \verb|SaferDynamicArray| class from the day three slides into a template class.
+
+The \verb|SaferDynamicArray| class dynamically allocates an array of \verb|int| objects in its constructor, and cleans up this array in its destructor. The class declaration looks something like this (modified slightly from the example in the slides):
+
+\begin{verbatim}
+class DynamicArray {
+  public:
+    explicit DynamicArray(const unsigned int size)
+    : size_(size), array(new int[size])
+    {}
+
+    ~DynamicArray() { delete[] array; }
+    
+    unsigned int size() const { return size_; }
+    int* array() { return array_; }
+  private:
+    const unsigned int size_;
+    int* array_;
+};
+\end{verbatim}
+
+This seems like something we might want to reuse, especially with different types (though we'd be better off using \verb|std::vector| in reality; this serves as an example of template classes only!) In order to make this reusable for different types, we must turn it into a template class. With templates, though, the definition must be available to the compiler at all times for it to be able to instantiate the template with a specific type parameter, so we're going to have to include all of the code in the header for the new \verb|DynamicArray| template class:
+
+\begin{verbatim}
+template<typename T> class DynamicArray {
+  public:
+    DynamicArray(const unsigned int size)
+     : size_(size)
+     {
+       array_ = new T[size_];
+     }
+
+    ~DynamicList()
+    {
+      delete[] array_;
+    }
+    
+	unsigned int size() const { return size_; }
+    T* array() { return array_; }
+
+  private:
+    const int size_;
+    T* array_;
+};
+\end{verbatim}
+
+That's it! Now, we can use the type \verb|DynamicArray<int>| wherever we used to use the old version, but we get \verb|DynamicArray<double>| and \verb|DynamicArray<Particle>| (and so on) for free! 
+
+Note that you can also use template functions within template classes, providing for incredibly powerful, incredibly generic templates!
+
+\subsection{Templates in action}
+There's a lot more that you can do with templates. For a more detailed reference, see\cite{Templates}. Here, though, I'll demonstrate one neat trick for making life easier...
+
+You have probably noticed that if you want to push multiple elements onto a vector, you have to call \verb|push_back()| for each one in turn, which results in lots of boring code. We're now in a position to write some helper code to simplify this task for us and then to make this code generic using templates. But first, an aside on the comma operator.
+
+The comma operator is used to separate expressions such that one is evaluated, then the next. For instance, you could write a loop where you have one control variable and another dependent variable as follows:
+
+\begin{verbatim}
+void reverse(double* array1, double* array2, const int size)
+{
+  for(int i = 0, j = size-1; i < size; ++i, --j)
+  {
+    array2[j] = array1[i];
+  }
+}
+\end{verbatim}
+
+This code writes the elements in \verb|array1| into \verb|array2| in reverse order. Note the use of the comma operator in the final part of the for loop; to increment i and decrement j. When the comma operator is used, the left-hand expression is evaluated first, followed by the right-hand expression. The operator can be used multiple times and, like many operators in C++, it can be overloaded.
+
+This gives us a hint as to how we might improve assignment to vectors. Ultimately, we might want to be able to write something like:
+
+\begin{verbatim}
+std::vector<int> myVec;
+myVec += 1, 2, 3, 4, 5;
+\end{verbatim}
+
+and have the elements $1, 2, 3, 4$ and $5$ pushed onto the vector in turn. Looking at the code, it's clear that we need to provide two operators: \verb|operator+=| and \verb|operator,|. Here's the code for them:
+
+\begin{verbatim}
+std::vector<int>& operator+=(std::vector<int>& v, int element)
+{
+  v.push_back(element);
+  return v;
+}
+
+std::vector<int>& operator,(std::vector<int>& v, int element)
+{
+  v.push_back(element);
+  return v;
+}
+\end{verbatim}
+
+With these functions, we can write precisely the code that we wanted. It will now work as expected and push the elements one-by-one onto the vector. Now to make it more generic. We don't want to write this for every possible type a vector can contain, so let's make the vector's parameter a template parameter in our own functions:
+
+\begin{verbatim}
+template<typename T>
+std::vector<T>& operator+=(std::vector<T>& v, T element)
+{
+  v.push_back(element);
+  return v;
+}
+
+template<typename T>
+std::vector<T>& operator,(std::vector<T>& v, T element)
+{
+  v.push_back(element);
+  return v;
+}
+\end{verbatim}
+
+We can get away with this because template operators, just like ordinary template functions, can have their parameters deduced from their arguments. But this still isn't as generic as it could be. What we want is to write these functions just once and have them work with \emph{any} standard library sequence container. We know that standard library containers provide a typedef \verb|value_type| which is the type stored in them. Armed with this knowledge, we can make a further generalisation:
+
+\begin{verbatim}
+template<typename T>
+T& operator+=(T& v, typename T::value_type element)
+{
+  v.push_back(element);
+  return v;
+}
+
+template<typename T>
+T& operator,(T& v, typename T::value_type element)
+{
+  v.push_back(element);
+  return v;
+}
+\end{verbatim}
+
+What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these template functions and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
+
+This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| method; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on template functions, template classes, and \emph{template metaprogramming}!
+
+\subsection{Dependent types and the \texttt{typename} keyword}
+You've already seen \verb|typename| used in template parameter lists, but there is another use for it, and it was demonstrated in the operator examples of the previous section:
+\begin{verbatim}
+template<typename T>
+T& operator+=(T& v, typename T::value_type element)
+{
+  v.push_back(element);
+  return v;
+}
+
+template<typename T>
+T& operator,(T& v, typename T::value_type element)
+{
+  v.push_back(element);
+  return v;
+}
+\end{verbatim}
+
+Here, we say something rather unusual for the second argument
+\begin{verbatim}
+typename T::value_type element
+\end{verbatim}
+
+We have to say \verb|typename| here because \verb|value_type| is what C++ calls a \emph{dependent type}; that is, it depends on the template parameter \verb|T|. In general, until the template is instantiated, the compiler cannot know what \verb|value_type| is. It could either be a nested type (either via a typedef or nested class declaration), or it could be a static member variable. In order to forcibly resolve the ambiguity, one must specify that we are referring to a type name, with the \verb|typename| keyword. Even in the example above, where it is obvious from the context that we are naming a type, we must explicitly tell the compiler this\footnote{See \url{http://pages.cs.wisc.edu/~driscoll/typename.html} for more details on when to use \texttt{typename}, and why it is necessary.}. 
+
+\section{Boost \& smart pointers}\label{sec:boost}
+\subsection{Boost}
+The boost library is not part of the C++98 standard (though large parts of it are specified in the C++11 standard, which has not yet been widely adopted), but it is available on many modern systems and is used extensively in the C++ community. Boost provides a number of features that its developers feel were ``left out of C++'', as well as some features which are less useful and exist mainly as playgrounds for those who enjoy pushing the boundaries of C++.
+
+Aside from the smart pointers (discussed in section \ref{sec:boost_smart_ptr}), one of the most useful parts of boost is the Boost.Conversion library, which provides (amongst other things) the \verb|boost::lexical_cast| template functions.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/conversion/index.html}} These allow you to convert from one type to another (using string streams if required) provided the types have streaming operators. This greatly simplifies code such as converting a string to a number, since you can simply write:
+
+\begin{verbatim}
+std::string str = "0.707";
+double x = boost::lexical_cast<double>(str);
+\end{verbatim}
+
+Not only does it handle the conversion, as well as checking for possible problems (range errors, etc.) but it is also very expressive. When somebody reads the code above, it is very clear that you're performing a lexical conversion, i.e. treating the string as the string representation of a number, and extracting that number. This leads towards self-documenting code, where the code itself clearly states what it is doing without the need for comments!
+
+Remember, however, that boost is not part of the standard, and it is not available everywhere. Use it wisely, but do explore some of the things it has to offer; they will make your (programming) life much simpler.
+
+\subsection{Smart pointers}\label{sec:boost_smart_ptr}
+Smart pointers are a perfect example of RAII (Resource Acquisition Is Initialisation) since a smart pointer takes ownership of a resource when it is constructed, and frees up the resource when it is destroyed. The dumbest smart pointer is \verb|std::auto_ptr| which deletes the pointer it holds as soon as it goes out of scope. This is useful in some limited circumstances, but the real power of smart pointers comes in their ability to define more complex ownership. The \verb|boost::shared_ptr<T>| is a template class which holds a pointer to an object of type \verb|T| (a template parameter to be filled in with some real type) as well as keeping track of \emph{how many} other \verb|boost::shared_ptr| objects have a copy of that pointer. Only when the last \verb|boost::shared_ptr| which holds that specific pointer goes out of scope is the resource to which it points deleted. The boost library provides several smart pointers, in the Boost.SmartPtr library.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/smart_ptr/smart_ptr.htm}}
+
+\section{The singleton design pattern}\label{sec:singleton}
+A design pattern is a solution to a common software engineering problem. It is, in some sense, a generic recipe to follow in order to solve a certain kind of problem, either in a specific case or more generally. Design patterns are essentially solutions which have been tried and tested, proven to work and heavily documented.
+
+The Singleton design pattern ensures that a class has only one instance, and that there is a global point of access to it. The \verb|ParticleInfo| class developed today could be made to be a singleton. While the following discusses a \verb|ParticleInfo| class, the design pattern is useful anywhere you must ensure only one instance of a class exists.
+
+\subsection{Motivation}
+Particle information is a constant dataset which needs to be held by the program and made available for \verb|Particle| objects to use (e.g. to determine the mass of a $\mu$). This information should be held only once; any additional copies are a memory overhead we do not need. It is important to ensure that the information exists by the time it is first used, and that there is a global mechanism to access it (because we don't want to have to give each \verb|Particle| a pointer to the \verb|ParticleInfo| instance). Furthermore, it would be useful to avoid creating the object at all if we don't need it. This will save memory as well as improve runtime performance, since creating an object containing many maps takes a substantial amount of time... especially if you include every particle from the PDG listings!
+
+The Singleton pattern applies when there must be exactly one instance of a class, and it must be (globally) accessible to clients from a well-known access point.
+
+\subsection{Implementation}
+The Singleton pattern ensures that only one unique instance of the class exists, and that it is a normal instance of the class. It does this by writing the class in such a way as to guarantee that only one instance can ever exist; usually this is done by hiding the operations that create instances (constructors, copy assignment) and using a class method (static member function) to access this instance, creating it if required (thus ensuring that it is intialised before first use). Here is the class declaration:
+
+\begin{verbatim}
+class ParticleInfo {
+  public:
+    static const ParticleInfo* Instance();
+
+    // ordinary member functions:
+    int getPDGCode(const std::string& name) const;
+    std::string getName(const int id) const;
+    int getCharge(const int id) const;
+    double getMassMeV(const int id) const;
+    double getMassGeV(const int id) const;
+
+  private:
+    ParticleInfo();
+    ParticleInfo(const ParticleInfo&);
+    ~ParticleInfo() {}
+    ParticleInfo& operator=(const ParticleInfo&);
+    static ParticleInfo* theInstance;
+
+    // ordinary member variables:
+    std::map<std::string, int> name_to_id;
+    std::map<int, std::string> id_to_name;
+    std::map<int, int> id_to_charge;
+    std::map<int, double> id_to_mass;
+};
+\end{verbatim}
+
+We must now implement the constructor and the \verb|ParticleInfo::Instance()| static method. Note that the copy constructor and copy assignment operator are declared private but \emph{should never be defined}; this protects against the member functions themselves trying to make copies!
+
+The constructor is implemented as usual, and sets the ordinary member variables, filling the maps with the required information. The only thing that is different is the \verb|Instance()| static method:
+
+\begin{verbatim}
+// allocate and initialise the static member pointer
+ParticleInfo* ParticleInfo::theInstance = 0;
+
+const ParticleInfo* ParticleInfo::Instance()
+{
+  if ( theInstance == 0 )
+  {
+    theInstance = new ParticleInfo;
+  }
+  return theInstance;
+}
+\end{verbatim}
+
+Clients access the singleton through the \verb|Instance()| method. The pointer to the actual instance is initialised to zero, and the static member function returns its value, creating the object if it is zero. This is \emph{lazy initialisation}; the instance is not created and stored until it is first needed!
+
+For more on the Singleton design pattern, see\cite{DesignPatterns} (which also includes information about many other design patterns!)
+
+\phantomsection % Ensure PDF bookmark is set here
+\addcontentsline{toc}{section}{References}
+\bibliography{bibliography}
+
+\end{document}

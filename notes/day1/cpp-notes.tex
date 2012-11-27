@@ -1,0 +1,519 @@
+\documentclass[a4paper]{scrartcl}
+
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath,amssymb}
+
+\usepackage[square, comma, numbers, sort&compress]{natbib}
+
+\usepackage{tikz}
+
+\usepackage[pdftex, colorlinks]{hyperref}
+\usepackage[figure, table]{hypcap} % Fix a problem with hyperref
+\hypersetup{
+    bookmarksnumbered,
+    pdfstartview={Fit},
+    citecolor={black},
+    linkcolor={black},
+    urlcolor={black},
+    pdfpagemode={UseOutlines}
+}
+
+% Make hyperlinks jump to the right place
+\makeatletter
+\newcommand\org@hypertarget{}
+\let\org@hypertarget\hypertarget
+\renewcommand\hypertarget[2]{%
+\Hy@raisedlink{\org@hypertarget{#1}{}}#2%
+} \makeatother
+
+% Space between paragraphs, rather than indented paragraphs
+\parindent 0pt
+\parskip 1ex
+
+% Bibliography style
+%\bibliographystyle{unsrtnat} % `Plain' unsrtnat.bst
+\bibliographystyle{ajbunsrtnat} % Modified unsrtnat.bst to make article titles emphasized
+
+\newcommand{\decimal}{\ensuremath{\,(\mathrm{base}~10)}}
+\newcommand{\binary}{\ensuremath{\,(\mathrm{base}~2)}}
+\newcommand{\octal}{\ensuremath{\,(\mathrm{base}~8)}}
+\newcommand{\hex}{\ensuremath{\,(\mathrm{base}~16)}}
+
+\title{Computing Course Day 1\\
+Notes \& Discussion\\
+Second Edition}
+\author{Andrew J. Bennieston}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\pagebreak
+
+\section{Introduction}
+This document is a set of notes expanding on some of the issues in day one of the C++ course. The first edition was produced for the 2010 course, and this has been updated for 2011. Many of the things discussed here stem from comments or questions during the day itself.
+
+\section{C Headers}
+The C++ language is (mostly) backward-compatible with the C language. As such, the headers which form part of the C library are available in C++, but they have slightly different names. To transform a C header name to a C++ header name, remove the \texttt{.h} from the end, and put a \texttt{c} at the beginning. Table \ref{c-cpp-headers} lists some of the most common headers and their new names in C++, along with a brief description of their content.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|l|}
+\hline
+C Header & C++ Header & Description \\
+\hline
+\texttt{stdio.h} & \texttt{cstdio} & C-style I/O functions (\texttt{printf}, \texttt{scanf}, ...) \\
+\texttt{stdlib.h} & \texttt{cstdlib} & C standard library functions \\
+\texttt{math.h} & \texttt{cmath} & Mathematical functions \\
+\texttt{string.h} & \texttt{cstring} & C-style string (\texttt{char*}) manipulation functions \\
+\texttt{limits.h} & \texttt{climits} & Macros defining min/max values of numeric types \\
+\hline
+\end{tabular}
+\caption{\label{c-cpp-headers}C headers and their names in C++}
+\end{table}
+
+\section{Commenting}
+An emphasis was placed on commenting code, but it is often not clear when to comment and when not to. The rules are somewhat flexible on this, as with many stylistic matters relating to writing code (tabs or spaces, where to place the opening braces of functions, code blocks, classes, etc.) but there are some general guidelines.
+
+The idea behind commenting is not to say what you're doing, but to say why you're doing it. Well-written code should speak for itself, so you need never write comments like:
+
+\begin{verbatim}
+++i; // Add one to i
+\end{verbatim}
+
+Comments should be placed at the beginning of each function, to explain what the function does, and at the beginning of code blocks or sections which do something particularly complicated. If there are any lines of code whose purpose is not immediately obvious, such as those dealing with bit manipulations, or accommodating some quirk of a library or external dependency, these should be commented too. In particular, if you're doing something that people don't expect, comment it.
+
+Your code should end up with comments describing the purpose of each code block or function---stating why you're doing what you're doing---and have additional comments for particularly obscure sections of code.
+
+Comments should not be used as a substitute for good variable names, clear coding styles and small functions which do one well-defined thing.
+
+One possible use for comments is to mark somewhere that code would normally be expected, but where it is not needed in some particular case. For example, a \texttt{for} loop has three parts at the top:
+\begin{verbatim}
+for ( initialiser ; condition ; loop_process )
+\end{verbatim}
+Actually, all three of these are optional, so you can make an infinite loop by simply doing:
+\begin{verbatim}
+for ( ; ; ) // forever
+\end{verbatim}
+It should be noted that \texttt{while(true)} is preferred over \texttt{for(;;)} where you want infinite loops!
+
+If you want to specify just some of these parts, it can be useful to make a comment to that effect, so as to avoid confusing people who look at the code later:
+\begin{verbatim}
+int i(0);
+std::cout << "Enter starting point: ";
+std::cin >> i;
+for ( /* use existing value of i */ ; i < 10; ++i )
+{
+  std::cout << i << "\n";
+}
+\end{verbatim}
+
+In the code above, the user is given the opportunity to specify the starting point, and the loop counts from there to 10. Of course, you should always check that the input operation did not fail, and that the user entered a sensible value (in this case, less than 10). I didn't include those steps above since the example is for illustration only!
+
+\section{Variable Naming Schemes}
+In C++, there is no (practical) limit on the length of variable names. While you should keep names simple to avoid typos, this allows you to make variables more descriptive than \texttt{int n} or \texttt{double p}. You could, for instance, use \texttt{int event\_count} or \texttt{double proton\_momentum}. Avoid \texttt{UPPERCASE\_NAMES} since these are typically used for preprocessor macros (which should be avoided at all costs). Names beginning with an underscore should not be used since the C++ standard library and compiler implementations might use variables with this naming convention internally. See also table \ref{keywords} for a list of language keywords, which cannot be used as names.
+
+The same rules apply to function and class names, but usually a local coding style will exist to define a \emph{convention} for naming such things. Typically this involves e.g. naming all classes with uppercase letters at the beginning of each word, such as \texttt{LorentzVector} or \texttt{LinearDifferentialEquation}, while functions will either be \texttt{some\_function\_name()} or \texttt{someFunctionName()}. Naming conventions vary, but the important thing is to pick one and stick with it.
+
+\section{Keywords}
+The C++ standard reserves certain words, known as \emph{keywords} for use by the language itself. The complete list is given in table \ref{keywords}. These cannot be used for variable names. The C++ Standard\cite{C++Standard} defines these names.
+
+You'll notice that the keywords \texttt{and}, \texttt{or} and \texttt{not} are defined; these are alternatives to the boolean operators \texttt{\&\&}, \texttt{||} and \texttt{!} but you should use the symbols in everyday coding. The keywords exist mainly to support programming on keyboard layouts where the symbols are not readily available! Of course, if you're used to programming in Python, you might prefer to spell out the words rather than use the symbols, since that's how you'd do it in Python!
+
+\begin{table}[htb]
+\centering
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+and & and\_eq & asm & auto & bitand & bitor \\
+bool & break & case & catch & char & class \\
+compl & const & const\_cast & continue & default & delete \\
+do & double & dynamic\_cast & else & enum & explicit \\
+export & extern & false & float & for & friend \\
+goto & if & inline & int & long & mutable \\
+namespace & new & not & not\_eq & operator & or \\
+or\_eq & private & protected & public & register & reinterpret\_cast \\
+return & short & signed & sizeof & static & static\_cast \\
+struct & switch & template & this & throw & true \\
+try & typedef & typeid & typename & union & unsigned \\
+using & virtual & void & volatile & wchar\_t & while \\
+xor & xor\_eq & & & & \\
+\hline
+\end{tabular}
+\caption{\label{keywords}C++ Keywords}
+\end{table}
+
+\section{Stream States}
+The C++ I/O streams (input/output) library\cite{IOStreams} provides objects which represent entities from which one can read input, and to which one can write output. In the simplest case, the \texttt{std::cin} and \texttt{std::cout} objects are abstractions of the keyboard (terminal input) and the screen (terminal window). Strictly speaking, they are abstractions for the program's standard input and standard output streams, which may be redirected as you've already seen in the Linux session.
+
+As well as allowing you to push data to an output stream, or pull it from an input stream, they provide information about the stream \emph{state}. Once you've attempted an input operation, you can ask the stream if that operation was successful by calling its \texttt{fail()} method:
+\begin{verbatim}
+int i(0);
+std::cin >> i;
+if ( std::cin.fail() )
+{
+  std::cerr << "Failed while attempting to read an integer from";
+  std::cerr << "standard input. Did you type a letter by mistake?\n";
+}
+// Otherwise, use i
+\end{verbatim}
+
+If the input operation failed, the stream will be left in an invalid state and subsequent operations are unlikely to succeed. You can clear the state and erase the nonsense left in the stream in the following way:
+\begin{verbatim}
+if ( std::cin.fail() )
+{
+  std::cin.clear();
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), "\n");
+}
+\end{verbatim}
+The \texttt{clear()} method resets the stream state, so that subsequent operations will be attempted. The \texttt{ignore()} method skips characters in the input stream. It takes two arguments; the first is a number of characters to skip and the second is a character to stop at. The function will skip one character at a time, until it has skipped the number requested \emph{or} it hits a character matching the second argument. In the case above, it will continue until it skips a newline, or a very large number of characters have been read. See section \ref{numeric-limits} for more information on \texttt{std::numeric\_limits}. For now it is sufficient to know that the statement above requires the \texttt{<limits>} header to be included, and that the \texttt{std::streamsize} type is defined to be an integer whose range is big enough to hold the number corresponding to the maximum size of any single I/O operation.
+
+In the slides for day 1 you were told to use something like:
+\begin{verbatim}
+if ( std::cin.fail() )
+{
+  std::cin.clear();
+  std::cin.ignore(INT_MAX, "\n");
+}
+\end{verbatim}
+This behaves broadly equivalently, except that \texttt{INT\_MAX} is a C macro defined in \texttt{<climits>} (the old C \texttt{<limits.h>}; see table \ref{c-cpp-headers}). Macros should be avoided wherever possible, so the code that uses \texttt{std::streamsize} is preferred.
+
+\section{Numeric Limits}\label{numeric-limits}
+In C, the \texttt{<limits.h>} header provided macros such as \texttt{INT\_MAX} which represents the largest value which can be stored in an \texttt{int}. These are available in C++ through the \texttt{<climits>} header, but there is a better way. The \texttt{<limits>} header provides a mechanism for obtaining information about the limits (min value, max value, etc.) for many different types in a consistent way. If you want the equivalent to \texttt{INT\_MAX}, you'd do something like:
+\begin{verbatim}
+#include <limits>
+
+int main()
+{
+  int biggest = std::numeric_limits<int>::max();
+  std::cout << "The biggest value which can be held in an int is ";
+  std::cout << biggest << std::endl;
+  return 0;
+}
+\end{verbatim}
+
+\texttt{std::numeric\_limits} provides a lot more information than just the maximum value which can be held. The following code prints the machine epsilon for floating-point numbers. Machine epsilon is an estimate of the error on floating-point numbers, and is computed as the difference between $1.0$ and the smallest value greater than $1.0$ that is representable. Working with values smaller than this is possible, of course, but if you add $1$ to them (for instance), you lose precision. See \cite{Goldberg1991} for more information on floating-point arithmetic and the sources of error.
+\begin{verbatim}
+#include <iostream>
+#include <limits>
+
+int main()
+{
+  std::cout << std::numeric_limits<float>::epsilon() << std::endl;
+  std::cout << std::numeric_limits<double>::epsilon() << std::endl;
+  return 0;
+}
+\end{verbatim}
+On a 64-bit AMD Phenom II, this tells me that the machine epsilon for \texttt{float} values is $1.19209\times 10^{-7}$ and for \texttt{double} values it is $2.22045\times 10^{-16}$.
+
+\section{Boolean Literals, Numeric Literals, Character Literals \& String Literals}
+Literals are values which are hard-coded into a program, i.e. written into the source code. In the example below, the integer \texttt{i} is initialised with a literal \texttt{0}.
+\begin{verbatim}
+int i = 0;
+\end{verbatim}
+
+Apart from e.g. initialising to zero, it's a good idea to keep numeric literals out of your code by initialising a \texttt{const} variable or using an enumeration. In this way, if the numeric value has to be changed, it need only be changed in one place! Whenever you need a number such as the speed of light, or the mass of an electron, you should define a \texttt{const} variable to hold it, and initialise it to the correct value. If you use that variable everywhere instead of a numeric literal, you'll be able to change it (e.g. to add precision) if necessary (oh, and you're less likely to make a mistake because you're only typing it once!)
+
+\subsection{Boolean Literals}
+In reality, there are no ``boolean literals''. There are, however, two C++ keywords (words reserved for use by the language, which must not be used as variable names, etc.) \texttt{true} and \texttt{false}.
+
+\subsection{Integer Literals}
+Integer literals can be written in several ways. The simplest is to write the digits of the number as normal (but don't use commas to separate thousands!) The compiler should warn about literals which are too long to represent.
+\begin{verbatim}
+int four = 4;
+int n_bottles = 10;
+int n_red_balloons = 99;
+\end{verbatim}
+
+You can also write integer literals starting with \texttt{0} for octal numbers (base 8) or \texttt{0x} for hexadecimal numbers (base 16). For hexadecimal literals, the letters \texttt{a, b, c, d, e} and \texttt{f} are used to represent the numbers 10 through 15. See appendix \ref{bin-oct-hex} for more details on octal and hexadecimal.
+
+\begin{verbatim}
+int permissions = 0744;
+int sixteen = 0x10;
+int two_hundred_and_fifty_five = 0xff;
+\end{verbatim}
+
+The suffix \texttt{U} can be used to write \emph{unsigned} integer literals (values always $\ge 0$) and the suffix \texttt{L} can be used to write \emph{long} integer literals (on most modern platforms, \texttt{int} and \texttt{long} int are the same size anyway).
+
+\subsection{Floating-Point Literals}
+Floating-point literals are, by default, of type \texttt{double}. They can be written in a number of forms, as in the code sample below.
+\begin{verbatim}
+double pi = 3.1415926535897931;
+double c = 3e8;
+double h = 6.63e-34;
+double zero = 0.0;
+\end{verbatim}
+
+Note that you cannot put spaces in the middle of a floating-point literal, so writing \texttt{6.022 e 23} is invalid. For floating-point literals of type \texttt{float}, use the \texttt{f} or \texttt{F} suffix, and for floating-point literals of type \texttt{long double} use \texttt{l} or \texttt{L}.
+
+\subsection{Character Literals}
+Character literals are represented by a character enclosed in single quotes:
+\begin{verbatim}
+char a = 'a';
+char null = '\0';
+char newline = '\n';
+char at_symbol = '@';
+\end{verbatim}
+
+The use of character literals instead of their integer equivalents makes programs more portable. For instance, while the ASCII value of the character \texttt{'a'} is 97, using \texttt{'a'} to represent the character will work on computers which use a different character set. Note also that you can include \emph{special} characters such as tabs \verb|'\t'|, newlines \verb|'\n'| and the null character \verb|'\0'| (which is used to terminate C-style strings).
+
+\subsection{String Literals}
+A string literal is a character sequence enclosed in double quotes. You've seen these already as values streamed to the \texttt{std::cout} object to print messages to the screen. String literals contain one more character than they appear to, since all C-style strings are terminated with a null character \verb|'\0'|. The \emph{type} of a string literal is \emph{array of the appropriate number of \emph{const} characters}, so \texttt{"Feynman"} has type \texttt{const char[8]}.
+
+There are many details and issues to worry about when dealing with C-style strings. For anything other than writing string literals to standard output, you should probably use the \texttt{std::string} class from the C++ Standard Library\cite{StandardLibrary} instead. Note that \texttt{std::string} objects can be initialised from a string literal.
+
+\section{Declaration, Definition and Initialisation}
+Variables are declared by specifying their type and their name:
+\begin{verbatim}
+int a;
+\end{verbatim}
+Variables should \emph{always} be initialised at the point of declaration. This means that you should write 
+\begin{verbatim}
+int a(0);
+\end{verbatim}
+(or whatever sensible initial value the variable should have).
+
+Note that using the \texttt{=} assignment operator is equivalent to using brackets for initialisation, at the point of declaration:
+\begin{verbatim}
+double c = 3e8;
+double h(6.63e-34);
+\end{verbatim}
+Both variables are correctly initialised, but you should pick one style of initialisation and stick with it, for consistency. The bracketed form is preferred since you can also initialise complex objects in the same way (see the material from week 3 for more on this)!
+
+Functions can (and must!) be both \emph{declared} and \emph{defined}. This can happen in the same place, before the first use of a function, e.g.:
+\begin{verbatim}
+#include <iostream>
+
+void print_help()
+{
+  std::cout << "HELP!\n";
+}
+
+int main()
+{
+  print_help();
+  return 0;
+}
+\end{verbatim}
+
+or they may be \emph{forward declared} and defined later:
+\begin{verbatim}
+#include <iostream>
+
+void print_help(); // declaration
+
+int main()
+{
+  print_help();
+  return 0;
+}
+
+void print_help() // definition
+{
+  std::cout << "HELP!\n";
+}
+\end{verbatim}
+
+A function declaration specifies the \emph{signature} (name and argument types) as well as the return type of a function. A function definition specifies the same signature as well as the function body; the code to be executed when that function is called. Later in the course, we split code into multiple files and place function declarations in header files and function definitions in source files which are later linked together.
+
+\section{Comparison of Characters vs. Comparison of Strings}
+Since characters are really just integers, you can compare them using the usual comparison operators, e.g.
+\begin{verbatim}
+char ch(0);
+std::cin >> ch;
+if ( ch == 'q' )
+  exit(1);
+\end{verbatim}
+
+This is not the case for C-strings, which must be compared using functions such as \texttt{strcmp()} from the \texttt{<cstring>} header.
+
+\section{\texttt{switch} as an Alternative to \texttt{if} Statements}
+In the \emph{special case} where you have a lot of \texttt{if ... else if ... else if ... else} tests, and the values against which you are testing are \emph{integer literals} (which includes characters), you can use the \texttt{switch} statement instead. This has the advantage of reducing the amount of code you have to write, and also has a hidden advantage---the compiler can \emph{optimise} this construct by using a \emph{jump table}, which will be much faster than repeated tests against the conditions of \texttt{if} statements.
+
+The syntax looks something like this:
+\begin{verbatim}
+int month(0);
+std::cin >> month;
+
+switch ( month )
+{
+  case 1:
+    std::cout << "Jan";
+    break;
+  case 2:
+    std::cout << "Feb";
+    break;
+  case 3:
+    std::cout << "Mar";
+    break;
+  case 4:
+    std::cout << "Apr";
+    break;
+  case 5:
+    std::cout << "May";
+    break;
+  case 6:
+    std::cout << "Jun";
+    break;
+  case 7:
+    std::cout << "Jul";
+    break;
+  case 8:
+    std::cout << "Aug";
+    break;
+  case 9:
+    std::cout << "Sep";
+    break;
+  case 10:
+    std::cout << "Oct";
+    break;
+  case 11:
+    std::cout << "Nov";
+    break;
+  case 12:
+    std::cout << "Dec";
+    break;
+  default:
+    std::cout << "Invalid Month";
+    break;
+}
+\end{verbatim}
+
+It is possible to \emph{cascade} through multiple cases by omitting the \texttt{break} keyword:
+\begin{verbatim}
+char option(0);
+std::cin >> option;
+
+switch ( option )
+{
+  case 'a':
+  case 'A':
+  case '+':
+    do_addition();
+    break;
+
+  case 's':
+  case 'S':
+  case '-':
+    do_subtraction();
+    break;
+
+  case 'm':
+  case 'M':
+  case '*':
+    do_multiplication();
+    break;
+
+  case 'd':
+  case 'D':
+  case '/':
+    do_division();
+    break;
+
+  case 'q':
+  case 'Q':
+    std::cout << "Bye!\n";
+    exit(1);
+    break;
+
+  default:
+    std::cout << "Invalid option\n";
+    break;
+}
+\end{verbatim}
+
+In this way, you can perform one task if one of several cases match. Note that in non-obvious cases where you want the cascade behaviour, you should comment this to prevent future maintainers adding break statements in to ``fix'' your code!
+
+\section{A note on program design}
+Towards the end of day 1 the concept of splitting code up into functions was introduced. When considering how best to split your code up into functions, consider some (or all) of the following points:
+
+\begin{itemize}
+	\item Code which performs repetetive tasks such as checking for valid input should be written as a function which can be called repeatedly, instead of writing the same code out many times in different places. Not only does this reduce the chance of you making a mistake writing the code, it's also more efficient since the compiler need only process that code once, and the resulting executable file only stores one copy of it.
+	\item Functions should be kept fairly small; guidelines vary here... one extreme is ``functions should be $7\pm 2$ lines long'', while a more realistic guideline is to ensure that a function performs just one conceptual task. Write as many lines as you need to perform that task, but if you find you're actually doing two tasks, you should probably have had two functions!
+	\item Shorter functions are easier to debug than longer functions.
+\end{itemize}
+
+Figuring out the best way to decompose a task into a set of functions is not always easy, but as with most things you'll improve with practice. The same is true of decomposing a task into a set of objects (the topic of day 3). For now, just try to keep functions small and with a single, well-defined job. Figure out what input the function needs to do that job, and what output it must provide when the job is done; this defines the interface to your function, and the rest is just the code to perform the tasks required to get that job done!
+
+In a well designed program, functions should know an absolute minimum about the environment outside of their scope, so for example a function to add two numbers together shouldn't call another function to get those numbers; the numbers should be passed as input, and should be obtained before the addition function is called---possibly by calling another function, first, whose job is to read and check input!
+
+In the homework assignment, you'll need to read different inputs depending on the operation performed (addition requires 2 numbers, but calculating the invariant mass of two particles requires 8). It's perfectly acceptable to decide what operation you're going to perform before you read input, read the appropriate number of items, then call a function to do something with the things you just read in!
+
+\appendix
+\section{Binary, octal and hexadecimal}\label{bin-oct-hex}
+\subsection{Binary}
+The number system we use in our everyday lives is the \emph{decimal} number system, or base $10$; this means that the system is based on powers of $10$, such that the rightmost digit is taken to be multiplied by $10^0$, the next left digit by $10^1$, the next by $10^2$, and so on. In this way, the digits $0$--$9$ are used to represent a multiplier on the power of $10$ for a given column. For example, the decimal number $101$ (one hundred and one; base ten) is written:
+
+\[ 101 \decimal = 1\times10^2 + 0\times10^1 + 1\times10^0 = 100 + 0 + 1\]
+
+In the digital computer, it is natural to use the base $2$ or binary number system. In this system, each column represents a power of $2$ and you have either a $1$ or a $0$ in any given column. For example, the binary number $101$ (one, zero, one; base two) is converted to decimal as follows:
+
+\[ 101 \binary = 1\times2^2 + 0\times2^1 + 1\times2^0 = 4 + 0 +  1 = 5 \]
+
+In the same way that columns in decimal represent (from right to left) ones, tens, hundreds, etc. the columns in binary represent 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, \ldots
+
+\subsection{Hexadecimal}
+Hexadecimal (often shortened to just \emph{hex}) is the name given to the base $16$ number system. Here, the digits 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E and F are used, where A represents the decimal number 10, B the number 11, and so on through to F, which represents the decimal number 15. Each column represents a power of 16. A first example will use our favourite sequence of digits, $101$:
+
+\[ 101\hex = 1\times16^2 + 0\times16 + 1\times1 = 256 + 0 + 1 = 257 \]
+
+And an example using the alphabetic symbols:
+
+\[ FACE\hex = 15\times16^3 + 10\times16^2 + 12\times16^1 + 14\times16^0 \]
+\[ = 15\times4096 + 10\times256 + 12\times16 + 14 = 64206 \]
+
+Note that you'll often see hex numbers written with a leading \texttt{0x} or \texttt{\\x}, since this is how they are often represented in programming languages. For example, in C++ a hexadecimal literal is written by using the digits \texttt{0}--\texttt{F}, and prefixing the \texttt{0x} identifier:
+
+\begin{verbatim}
+int two_hundred_and_fifty_five = 0xFF;
+int sixteen = 0x10;
+int ten = 0xA;
+unsigned int biggest_thirty_two_bit_int = 0xFFFFFFFF;
+\end{verbatim}
+
+The observant reader will have noticed that the numeric values (in decimal!) of the powers of 16 (1, 16, 256, 4096) correspond to every fourth term in the sequence of powers of 2. This allows for a neat trick in converting between binary and hexadecimal, and explains why hexadecimal is so popular amongst programmers!
+
+In order to convert a binary number to hexadecimal, group it (starting from the right-most digit) into four digit long segments. If the leftmost segment has fewer than four digits, assume the leading digits are 0. Now, each group represents a number between 0 and 15. Simply replace those four binary digits with the single hexadecimal digit corresponding to that value! This works only because of the four-place skipping in the sequence of powers; a similar conversion between binary and decimal does not work! This procedure is illustrated with an example of a 32-bit binary number, below.
+
+\[ 11111111110000001110101001001000\binary = \]
+
+\[\begin{array}{lcccccccc}
+\mathrm{binary:}  &1111 & 1111 & 1100 & 0000 & 1110 & 1010 & 0100 & 1000\\
+\mathrm{decimal:} &15   & 15   & 12   & 0    & 14   & 10   & 4    & 8   \\
+\mathrm{hex:}     &F    & F    & C    & 0    & E    & A    & 4    & 8
+\end{array}\]
+\[ = FFC0EA48 \hex \]
+
+You should notice that since each group of 4 binary digits corresponds to one hex digit, you can easily tell the number of bits in a hexadecimal number by counting the number of digits and multiplying by 4; for instance \texttt{0xFF} is an 8-bit number.
+
+Since hex provides a much shorter (in terms of number of characters typed) representation of a number than binary, it is typically used in computing to represent large binary numbers, such as memory addresses. Another useful point to note is that the decimal numbers corresponding to powers of 2 have an easy to remember representation in hexadecimal:
+
+\[\begin{array}{ccccccccccc}
+2^0 & 2^1 & 2^2 & 2^3 & 2^4 & 2^5 & 2^6 & 2^7 & 2^8 & 2^9 & 2^{10} \\
+1 & 2 & 4 & 8 & 16 & 32 & 64 & 128 & 256 & 512 & 1024 \\
+\mathrm{0x1} & \mathrm{0x2} & \mathrm{0x4} & \mathrm{0x8} & \mathrm{0x10} & \mathrm{0x20} & \mathrm{0x40} & \mathrm{0x80} & \mathrm{0x100} & \mathrm{0x200} & \mathrm{0x40}0\\
+\end{array}\]
+
+As you can see, you simply cycle through $(1, 2, 4, 8)$ and add another zero when you start the cycle again!
+
+\subsection{Octal}
+Octal is base $8$; it uses the digits 0--7 and columns represent powers of 8. I mention it here only because it is sometimes used as an alternative representation of some numbers in programming; in particular it is used when dealing with permissions for UNIX files. In C++, octal integer literals can be written by adding a leading 0 (zero). For example, \texttt{0777} is an octal literal representing:
+\[ 7\times8^2 + 7\times8^1 + 7\times8^0 = 511 \]
+
+The keen-eyed will notice that if $777\octal$ is $511\decimal$, this means that the octal system also shares the numerical values of its powers with binary (1, 8, 64, 512, \ldots) which means that a similar conversion between binary and octal exists when digits are grouped in 3s:
+\[ 11111111110000001110101001001000\binary = \]
+\[\begin{array}{lccccccccccc}
+\mathrm{binary:}  & 011 & 111 & 111 & 110 & 000 & 001 & 110 & 101 & 001 & 001 & 000 \\
+\mathrm{decimal:} & 3   & 7   & 7   & 6   & 0   & 1   & 6   & 5   & 1   & 1   & 0 \\
+\mathrm{octal:}   & 3   & 7   & 7   & 6   & 0   & 1   & 6   & 5   & 1   & 1   & 0 
+\end{array}\]
+\[ = 37760165110\octal \]
+
+\phantomsection % Ensure PDF bookmark is set here
+\addcontentsline{toc}{section}{References}
+\bibliography{bibliography}
+
+\end{document}
