@@ -234,7 +234,7 @@ int main(int argc, char** argv)
 }
 \end{verbatim}
 
-\verb|boost::lexical_cast<>()| is a template function which converts from the argument type to the template parameter type. See section \ref{sec:templates} for more on templates. The nice thing about \verb|boost::lexical_cast<>()| is that it makes the intention clear---you state that you want to convert from a string to an integer---even though it (often) uses string streams behind the scenes!
+\verb|boost::lexical_cast<>()| is a function template which converts from the argument type to the template parameter type. See section \ref{sec:templates} for more on templates. The nice thing about \verb|boost::lexical_cast<>()| is that it makes the intention clear---you state that you want to convert from a string to an integer---even though it (often) uses string streams behind the scenes!
 
 \section{Compiling, linking \& distributing code}\label{sec:compiling}
 \subsection{Distributing code}
@@ -760,7 +760,7 @@ You've already seen templates in use; the standard library containers are templa
 
 There are lots of things you can do with templates, and many subtleties with the way certain features of C++ work in the presence of templates. I only cover some of the basics below; for the rest, refer to a good book, such as\cite{Templates}.
 
-\subsection{Template functions}\label{sec:templates_functions}
+\subsection{Function Templates}\label{sec:templates_functions}
 The \verb|pow()| function provided by the math library supports arbitrary real arguments $a,b$ and returns $a^b$. While this is useful in some circumstances, there is considerable overhead involved in providing this level of generality, and in many cases it is not needed. For the most part, you'll be computing integer powers of something; indeed, by far the most common operation is to square something. It is, computationally speaking, much quicker to execute \verb|x*x| than it is to execute \verb|pow(x,2)|, but we may lose some of the expressiveness; that is, making it obvious that we're squaring something. We can do better by defining a function to square doubles, and declaring it \emph{inline} so that the compiler can optimise away the function call and replace it with the code from the function:
 
 \begin{verbatim}
@@ -780,7 +780,7 @@ This retains the expressiveness of the notation---it is clear that we mean to sq
 
 But we can still do better! The code above will only square doubles (or anything that can be converted to a double). We could provide a version for ints, and a version for any type we choose which has \verb|operator*| defined, but we don't need to write all that code; most of which is duplicating the same statement, and the same logic. We can write it once in a generic way, and have the compiler generate the specific code to handle a given type when we try to use it.
 
-This is the power of \emph{template functions}. By writing code such as the following, we can provide the compiler with a template, into which it substitutes the type required at compiletime:
+This is the power of \emph{function templates}. By writing code such as the following, we can provide the compiler with a template, into which it substitutes the type required at compiletime:
 
 \begin{verbatim}
 template<typename T> inline T square(const T& x)
@@ -789,7 +789,7 @@ template<typename T> inline T square(const T& x)
 }
 \end{verbatim}
 
-We can use this either by explicitly specifying the template parameter, as we do when we tell a \verb|std::vector| what type it contains, or implicitly by allowing the compiler to \emph{deduce} the template parameter from the argument type (since the function argument is of type \verb|T|, which is a template parameter, the compiler will try to insert the type of an argument to \verb|square()| as the substitution for \verb|T|). Whenever the compiler hits code which makes use of a template function, it checks to see if it has already generated the code from the template (\emph{instantiating the template}) with that parameter substitution, and if not, generates it. This allows us to write code once and have the compiler produce a function for each type it is actually called with. Here's an example:
+We can use this either by explicitly specifying the template parameter, as we do when we tell a \verb|std::vector| what type it contains, or implicitly by allowing the compiler to \emph{deduce} the template parameter from the argument type (since the function argument is of type \verb|T|, which is a template parameter, the compiler will try to insert the type of an argument to \verb|square()| as the substitution for \verb|T|). Whenever the compiler hits code which makes use of a function template, it checks to see if it has already generated the code from the template (\emph{instantiating the template}) with that parameter substitution, and if not, generates it. This allows us to write code once and have the compiler produce a function for each type it is actually called with. Here's an example:
 
 \begin{verbatim}
 int a = 4;
@@ -812,14 +812,14 @@ std::string t = square(s);
 // std::string does not provide operator*
 \end{verbatim}
 
-In the final example, the substitution for \verb|T| to \verb|std::string| causes the compilation to fail because the \verb|std::string| class does not support multiplication, but you begin to see the power of templates. If we had a \verb|Complex| class, representing complex numbers, we could define multiplication for this using \verb|operator*| and we would not need to write a new \verb|square()| function because the template function will allow the compiler to generate one for us!
+In the final example, the substitution for \verb|T| to \verb|std::string| causes the compilation to fail because the \verb|std::string| class does not support multiplication, but you begin to see the power of templates. If we had a \verb|Complex| class, representing complex numbers, we could define multiplication for this using \verb|operator*| and we would not need to write a new \verb|square()| function because the function template will allow the compiler to generate one for us!
 
 Note that templates are a compile-time thing; you save on writing code, but the compiler will still generate a version of \verb|square()| for each parameter type it encounters. This can be beneficial because if you do not use \verb|square()| on a particular type, the code for it will never be created by the compiler!
 
 Template parameter deduction allows the compiler to determine the type of template parameters from the arguments to the function. This can be very useful, as you've seen in the code above, since we do not need to specify the type manually (provided it can be deduced).
 
 \subsection{Template classes}
-In the same way as for template functions, it is possible to create \emph{template classes}. The standard library includes many of these, but we'll look at a simple example; converting the \verb|SaferDynamicArray| class from the day three slides into a template class.
+In the same way as for function templates, it is possible to create \emph{template classes}. The standard library includes many of these, but we'll look at a simple example; converting the \verb|SaferDynamicArray| class from the day three slides into a template class.
 
 The \verb|SaferDynamicArray| class dynamically allocates an array of \verb|int| objects in its constructor, and cleans up this array in its destructor. The class declaration looks something like this (modified slightly from the example in the slides):
 
@@ -867,7 +867,7 @@ template<typename T> class DynamicArray {
 
 That's it! Now, we can use the type \verb|DynamicArray<int>| wherever we used to use the old version, but we get \verb|DynamicArray<double>| and \verb|DynamicArray<Particle>| (and so on) for free! 
 
-Note that you can also use template functions within template classes, providing for incredibly powerful, incredibly generic templates!
+Note that you can also use function templates within template classes, providing for incredibly powerful, incredibly generic templates!
 
 \subsection{Templates in action}
 There's a lot more that you can do with templates. For a more detailed reference, see\cite{Templates}. Here, though, I'll demonstrate one neat trick for making life easier...
@@ -947,9 +947,9 @@ T& operator,(T& v, typename T::value_type element)
 }
 \end{verbatim}
 
-What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these template functions and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
+What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these function templates and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
 
-This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| method; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on template functions, template classes, and \emph{template metaprogramming}!
+This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| method; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on function templates, template classes, and \emph{template metaprogramming}!
 
 \subsection{Dependent types and the \texttt{typename} keyword}
 You've already seen \verb|typename| used in template parameter lists, but there is another use for it, and it was demonstrated in the operator examples of the previous section:
@@ -980,7 +980,7 @@ We have to say \verb|typename| here because \verb|value_type| is what C++ calls 
 \subsection{Boost}
 The boost library is not part of the C++98 standard (though large parts of it are specified in the C++11 standard, which has not yet been widely adopted), but it is available on many modern systems and is used extensively in the C++ community. Boost provides a number of features that its developers feel were ``left out of C++'', as well as some features which are less useful and exist mainly as playgrounds for those who enjoy pushing the boundaries of C++.
 
-Aside from the smart pointers (discussed in section \ref{sec:boost_smart_ptr}), one of the most useful parts of boost is the Boost.Conversion library, which provides (amongst other things) the \verb|boost::lexical_cast| template functions.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/conversion/index.html}} These allow you to convert from one type to another (using string streams if required) provided the types have streaming operators. This greatly simplifies code such as converting a string to a number, since you can simply write:
+Aside from the smart pointers (discussed in section \ref{sec:boost_smart_ptr}), one of the most useful parts of boost is the Boost.Conversion library, which provides (amongst other things) the \verb|boost::lexical_cast| function template.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/conversion/index.html}} These allow you to convert from one type to another (using string streams if required) provided the types have streaming operators. This greatly simplifies code such as converting a string to a number, since you can simply write:
 
 \begin{verbatim}
 std::string str = "0.707";
