@@ -218,7 +218,7 @@ int i = 0;
 Apart from e.g. initialising to zero, it's a good idea to keep numeric literals out of your code by initialising a \texttt{const} variable or using an enumeration. In this way, if the numeric value has to be changed, it need only be changed in one place! Whenever you need a number such as the speed of light, or the mass of an electron, you should define a \texttt{const} variable to hold it, and initialise it to the correct value. If you use that variable everywhere instead of a numeric literal, you'll be able to change it (e.g. to add precision) if necessary (oh, and you're less likely to make a mistake because you're only typing it once!)
 
 \subsection{Boolean Literals}
-In reality, there are no ``boolean literals''. There are, however, two C++ keywords (words reserved for use by the language, which must not be used as variable names, etc.) \texttt{true} and \texttt{false}.
+Boolean literals are represented using the two C++ keywords \texttt{true} and \texttt{false}.
 
 \subsection{Integer Literals}
 Integer literals can be written in several ways. The simplest is to write the digits of the number as normal (but don't use commas to separate thousands!) The compiler should warn about literals which are too long to represent.
