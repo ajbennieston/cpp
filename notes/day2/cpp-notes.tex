@@ -367,7 +367,7 @@ int i = 3;
 int j(3);
 \end{verbatim}
 
-Both of these are equivalent. Note, however, that if the object being initialised is not a built-in type and a constructor must be called, only the second form is valid.
+Both of these are equivalent. Note, however, that if the object being initialised is not a built-in type and a constructor must be called, the second form is typically preferred, and is the only one that will work if the constructor requires multiple parameters.
 
 When you \emph{assign} a value to a variable, at some point after its initialisation, you don't specify the type, and you can only use the \verb|=| operator (or variants thereof):
 \begin{verbatim}
