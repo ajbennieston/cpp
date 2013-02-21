@@ -195,7 +195,7 @@ produces an array containing the characters of the C-style string, like so:
 
 If, instead, you said:
 \begin{verbatim}
-char* word = "Hello";
+const char* word = "Hello";
 \end{verbatim}
 You get a pointer to an array containing those characters:
 
@@ -311,7 +311,7 @@ What \emph{is} always the case is that local objects such as variables declared 
 
 The memory you allocate through \verb|new| or \verb|new[]| has what is called \emph{dynamic storage duration}; they come into being when you allocate them, and don't get destroyed until you use \verb|delete| or \verb|delete[]| (as appropriate) on them. Variables with dynamic storage duration are often called \emph{heap variables} because of the way the areas of memory used by \verb|new| and \verb|new[]| are managed, often using data structures known as heaps.
 
-There is a third kind of storage duration: \emph{static storage duration}. Variables of this type exist for the entire run-time of the program. Global variables (which should never be used) have static storage duration, as do variables explicitly labelled \verb|static| in functions or other local contexts. You'll probably see static class member variables in day 3.
+There is a third kind of storage duration: \emph{static storage duration}. Variables of this type exist for the entire run-time of the program. Global variables (which you should almost never use!) have static storage duration, as do variables explicitly labelled \verb|static| in functions or other local contexts. You'll probably see static class member variables in day 3.
 
 Saying \emph{stack} or \emph{heap} in the context of the type of variable you're talking about will make you understood, but it's more correct to talk of \emph{automatic} or \emph{dynamic} storage duration; the C++ standard has no concept of \emph{stack} or \emph{heap} in this way, but it does define the lifetimes of objects with \emph{static}, \emph{automatic} or \emph{dynamic} storage duration!
 
@@ -326,7 +326,7 @@ do {
 } while ( x > 0 );
 \end{verbatim}
 
-This is useful sometimes where you want to do something (like, read input) then check if it worked and if not, do it again. It's also useful for sort algorithms where you want to run through the array once, and then if a swap occurred, run through again. You always want to go through at least once, so a \verb|do ... while| loop lets you do this without having to test a condition, or use \verb|while( true )|.
+This is useful sometimes where you want to do something (like, read input) then check if it worked and if not, do it again. It's also useful for sort algorithms where you want to run through the array once, and then if a swap occurred, run through again. In these situations, you always want to go through at least once, so a \verb|do ... while| loop lets you do this without having to test a condition, or use \verb|while( true )|.
 
 \section{References}
 References are not the same as pointers. A reference is \emph{intrinsically const} in that, once initialised, it cannot be changed to refer to another object. This is not the same as the object itself being const, though---you can still change an object through a reference. Let's illustrate this with some code demonstrating the use of a reference and an equivalent pointer.
