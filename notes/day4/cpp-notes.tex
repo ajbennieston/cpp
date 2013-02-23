@@ -53,7 +53,7 @@ Second Edition}
 This document is a set of notes expanding on some of the content of day four of the 2010 and 2011 C++ course. Many of the things discussed here stem from questions or comments during the day itself, while others exist as extension material.
 
 \section{Streams}\label{sec:streams}
-It is possible to fill entire books with information about C++ I/O streams\footnote{See, for instance, reference\cite{IOStreams}}. I'll avoid doing that here. What I will do is cover some of the common problems encountered when dealing with I/O in C++.
+It is possible to fill entire books with information about C++ I/O streams.\footnote{See, for instance, reference\cite{IOStreams}} I'll avoid doing that here. What I will do is cover some of the common problems encountered when dealing with I/O in C++.
 
 \subsection{File streams}
 In order to use the standard file streams, you will need to include the header \verb|<fstream>|.
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 
 \section{Compiling, linking \& distributing code}\label{sec:compiling}
 \subsection{Distributing code}
-Most software in the UNIX world is distributed in source format. This is because source compatibility across many machines and architectures is much easier than binary compatibility. You should distribute your code as a set of source files \emph{including all headers and library source} (unless the library is distributed separately), as well as some kind of build system. A \verb|Makefile| will suffice for simple projects, but for more advanced software you may want to look into some of the more flexible build systems, such as \emph{GNU Autotools}\cite{Autobook} and \emph{cmake}\footnote{\url{http://www.cmake.org/}}.
+Most software in the UNIX world is distributed in source format. This is because source compatibility across many machines and architectures is much easier than binary compatibility. You should distribute your code as a set of source files \emph{including all headers and library source} (unless the library is distributed separately), as well as some kind of build system. A \verb|Makefile| will suffice for simple projects, but for more advanced software you may want to look into some of the more flexible build systems, such as \emph{GNU Autotools}\cite{Autobook} and \emph{cmake}.\footnote{\url{http://www.cmake.org/}}
 
 Remember to distribute your complete source, and not to include binaries which, having been compiled on one system, are not likely to work elsewhere.
 
@@ -974,7 +974,7 @@ Here, we say something rather unusual for the second argument
 typename T::value_type element
 \end{verbatim}
 
-We have to say \verb|typename| here because \verb|value_type| is what C++ calls a \emph{dependent type}; that is, it depends on the template parameter \verb|T|. In general, until the template is instantiated, the compiler cannot know what \verb|value_type| is. It could either be a nested type (either via a typedef or nested class declaration), or it could be a static member variable. In order to forcibly resolve the ambiguity, one must specify that we are referring to a type name, with the \verb|typename| keyword. Even in the example above, where it is obvious from the context that we are naming a type, we must explicitly tell the compiler this\footnote{See \url{http://pages.cs.wisc.edu/~driscoll/typename.html} for more details on when to use \texttt{typename}, and why it is necessary.}. 
+We have to say \verb|typename| here because \verb|value_type| is what C++ calls a \emph{dependent type}; that is, it depends on the template parameter \verb|T|. In general, until the template is instantiated, the compiler cannot know what \verb|value_type| is. It could either be a nested type (either via a typedef or nested class declaration), or it could be a static member variable. In order to forcibly resolve the ambiguity, one must specify that we are referring to a type name, with the \verb|typename| keyword. Even in the example above, where it is obvious from the context that we are naming a type, we must explicitly tell the compiler this.\footnote{See \url{http://pages.cs.wisc.edu/~driscoll/typename.html} for more details on when to use \texttt{typename}, and why it is necessary.} 
 
 \section{Boost \& smart pointers}\label{sec:boost}
 \subsection{Boost}

@@ -85,7 +85,7 @@ namespace Foo {
 } // end namespace Foo
 \end{verbatim}
 
-Within the namespace, you don't need to do anything special to use the names defined; you can see this in the example above in the return type of \verb|makeFoo()|. Outside of the namespace, you must use the \emph{scope resolution operator} \verb|::| to specify the namespace\footnote{See the section on argument dependent lookup for exceptions to this rule!}:
+Within the namespace, you don't need to do anything special to use the names defined; you can see this in the example above in the return type of \verb|makeFoo()|. Outside of the namespace, you must use the \emph{scope resolution operator} \verb|::| to specify the namespace:\footnote{See the section on argument dependent lookup for exceptions to this rule!}
 
 \begin{verbatim}
 #include <iostream>
@@ -122,7 +122,7 @@ You may have noticed that in your solutions to the day 4 exercises, you probably
 
 This is why \verb|operator<<| works with the \verb|std::cout| object. The form of \verb|operator<<| used (most of the time) is defined in the \verb|std| namespace, but you don't have to say \verb|std::operator<<(std::cout, "Hello")| to use it! The compiler notices that (at least) one of the arguments to \verb|operator<<| is defined in namespace \verb|std|, so it considers the definition \verb|std::operator<<(...)| to be a match, as well as any variants which may be defined in the current scope.
 
-Argument dependent lookup is mostly used to ensure that operator overloading will always work\footnote{See \url{http://en.wikipedia.org/wiki/Argument-dependent_name_lookup} for more detail on ADL.}, but it also has the side effect of making the \emph{unqualified} calls to \verb|sort()| or \verb|transform()| find the true definitions \verb|std::sort()| and \verb|std::transform()|. Of course, if the arguments were not standard library iterators (if you used pointers to an array, for instance), the compiler would not be able to pick up a namespace and would produce an error saying something along the lines of ``\verb|sort()| is not defined in this scope.'' For this reason it is always a good idea to use the scope resolution operator and specify the namespace manually. Note that you can specify ``the global scope'' by using \verb|::| with no name before it:
+Argument dependent lookup is mostly used to ensure that operator overloading will always work,\footnote{See \url{http://en.wikipedia.org/wiki/Argument-dependent_name_lookup} for more detail on ADL.} but it also has the side effect of making the \emph{unqualified} calls to \verb|sort()| or \verb|transform()| find the true definitions \verb|std::sort()| and \verb|std::transform()|. Of course, if the arguments were not standard library iterators (if you used pointers to an array, for instance), the compiler would not be able to pick up a namespace and would produce an error saying something along the lines of ``\verb|sort()| is not defined in this scope.'' For this reason it is always a good idea to use the scope resolution operator and specify the namespace manually. Note that you can specify ``the global scope'' by using \verb|::| with no name before it:
 \begin{verbatim}
 ::swap(a, b);
 \end{verbatim}
@@ -285,7 +285,7 @@ class Derived : public Base {
 
 Now, we have both overloads available in the class. You may have seen this happen when you tried to implement the virtual functions from the base class \verb|EventGenerator| if you gave the function in the derived class \verb|TwoBodyEventGenerator| a different signature (different number or type of arguments, or missed off the final \verb|const| qualifier). The important thing is that \emph{when you override a virtual function the signatures must match exactly}.
 
-Hiding occurs whenever you give a function in a derived class the same name as one in a base. You can add \emph{using declarations} to bring the names from the base class into the scope of the derived class. Note that hiding takes place when you have a (pointer to) derived object. If you have a base object (or a pointer to one) then nothing is hidden because the compiler cannot assume anything about the derived classes\footnote{See \url{http://www.parashift.com/c++-faq-lite/strange-inheritance.html\#faq-23.9} for this example in more detail.}!
+Hiding occurs whenever you give a function in a derived class the same name as one in a base. You can add \emph{using declarations} to bring the names from the base class into the scope of the derived class. Note that hiding takes place when you have a (pointer to) derived object. If you have a base object (or a pointer to one) then nothing is hidden because the compiler cannot assume anything about the derived classes!\footnote{See \url{http://www.parashift.com/c++-faq-lite/strange-inheritance.html\#faq-23.9} for this example in more detail.}
 
 \section{Functions, function pointers \& function objects}
 \subsection{Functions \& function pointers}
