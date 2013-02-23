@@ -363,21 +363,28 @@ It is usually not necessary to use the \verb|this->x| form, though it can make i
 Despite member functions being bound to the object on which they are called, the functions themselves \emph{do not} get carried around with the object! Only one copy of the function code exists; it just gets called for different objects and is bound to each one when necessary. Each object instance does not have its own copy of the member functions!
 
 \subsection{Definition of member functions}
-Member functions can be defined at the point of declaration (i.e. within the class declaration) or at some later time (i.e. outside the class declaration). The example below declares two member functions, defining one inside the class declaration and one below it.
+Member functions can be defined at the point of declaration (i.e. within the class declaration) or at some later time (i.e. outside the class declaration). The example below declares four member functions, defining two inside the class declaration and two below it.
 
 \begin{verbatim}
-class Cat {
+class Vector2D {
   public:
-    void meow() { std::cout << "Meow!\n"; }
-    void eatMouse();
+    double getX() const { return x; }
+    double getY() const { return y; }
+    double getR() const;
+    double getTheta() const;
+  private:
+    double x;
+    double y;
 }
 
-void Cat::eatMouse()
+double Vector2D::getR() const
 {
-  std::cout << "Hunting for mice...\n";
-  std::cout << "Caught a mouse! Playing with it...\n";
-  std::cout << "Eating the mouse...\n";
-  std::cout << "Nom nom nom!\n";
+    return sqrt(x*x + y*y);
+}
+
+double Vector2D::getTheta() const
+{
+    return atan2(y, x);
 }
 \end{verbatim}
 
@@ -385,7 +392,7 @@ Member functions defined within the class declaration are candidates for \emph{i
 
 The compiler can choose which functions to inline, and whether or not it will do so, but the only candidates for inlining are those which are declared with the \verb|inline| keyword, or (non-virtual) member functions defined inside the class declaration. See day five for a discussion of virtual member functions.
 
-Generally, only \emph{very small} functions should be defined within the class declaration; things which set or get variables are good candidates, while anything more complicated should probably be declared inside and defined outside, like \verb|Cat::eatMouse()| in the example above.
+Generally, only \emph{very small} functions should be defined within the class declaration; things which set or get variables are good candidates, while anything more complicated should probably be declared inside and defined outside, like in the example above.
 
 Finally, note that member functions which are defined outside of the class declaration have to be defined in the scope of the class. The scope resolution operator \verb|::| is used to do this by naming the class before the function itself.
 
