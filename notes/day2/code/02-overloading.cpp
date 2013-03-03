@@ -23,6 +23,6 @@ double length(double t, double x, double y, double z)
 
 int main()
 {
-    length(16, 3, 2, 1);
+    length(4, 3, 2, 1);
     return 0;
 }
