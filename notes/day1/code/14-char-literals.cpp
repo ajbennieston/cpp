@@ -4,6 +4,7 @@
  * Run: Y
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
+ * Ignore Unused Variables: Y
  */
 
 int main()

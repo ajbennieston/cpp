@@ -4,7 +4,6 @@
  * Run: Y
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
- * Input: a
  */
 
 // NOTES: BEGIN INCLUSION

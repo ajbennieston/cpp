@@ -4,15 +4,18 @@
  * Run: Y
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
- * Ignore Unused Variables: Y
+ * Input: q
  */
+
+#include <iostream>
 
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int four = 4;
-    int num_bottles = 10;
-    int num_red_balloons = 99;
+    char ch(0);
+    std::cin >> ch;
+    if (ch == 'q')
+        exit(0);
     // NOTES: END INCLUSION
     return 0;
 }

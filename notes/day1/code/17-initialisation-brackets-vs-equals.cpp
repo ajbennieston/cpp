@@ -10,9 +10,8 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int four = 4;
-    int num_bottles = 10;
-    int num_red_balloons = 99;
+    double c = 3e8;
+    double h(6.63e-34);
     // NOTES: END INCLUSION
     return 0;
 }

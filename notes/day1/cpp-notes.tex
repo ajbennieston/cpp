@@ -40,6 +40,23 @@
 \newcommand{\octal}{\ensuremath{\,(\mathrm{base}~8)}}
 \newcommand{\hex}{\ensuremath{\,(\mathrm{base}~16)}}
 
+% Make code listings look good
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+    basicstyle=\small\ttfamily,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    tabsize=2,
+    extendedchars=true,
+    breaklines=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keywordstyle=\textbf,
+    language=C++
+}
+
 \title{Computing Course Day 1\\
 Notes \& Discussion\\
 Second Edition}
@@ -81,9 +98,7 @@ An emphasis was placed on commenting code, but it is often not clear when to com
 
 The idea behind commenting is not to say what you're doing, but to say why you're doing it. Well-written code should speak for itself, so you need never write comments like:
 
-\begin{verbatim}
-++i; // Add one to i
-\end{verbatim}
+\input{code/01-increment-i}
 
 Comments should be placed at the beginning of each function, to explain what the function does, and at the beginning of code blocks or sections which do something particularly complicated. If there are any lines of code whose purpose is not immediately obvious, such as those dealing with bit manipulations, or accommodating some quirk of a library or external dependency, these should be commented too. In particular, if you're doing something that people don't expect, comment it.
 
@@ -92,25 +107,18 @@ Your code should end up with comments describing the purpose of each code block 
 Comments should not be used as a substitute for good variable names, clear coding styles and small functions which do one well-defined thing.
 
 One possible use for comments is to mark somewhere that code would normally be expected, but where it is not needed in some particular case. For example, a \texttt{for} loop has three parts at the top:
-\begin{verbatim}
-for ( initialiser ; condition ; loop_process )
-\end{verbatim}
+
+\input{code/02-example-for-construct}
+
 Actually, all three of these are optional, so you can make an infinite loop by simply doing:
-\begin{verbatim}
-for ( ; ; ) // forever
-\end{verbatim}
+
+\input{code/03-infinite-loop}
+
 It should be noted that \texttt{while(true)} is preferred over \texttt{for(;;)} where you want infinite loops!
 
 If you want to specify just some of these parts, it can be useful to make a comment to that effect, so as to avoid confusing people who look at the code later:
-\begin{verbatim}
-int i(0);
-std::cout << "Enter starting point: ";
-std::cin >> i;
-for ( /* use existing value of i */ ; i < 10; ++i )
-{
-  std::cout << i << "\n";
-}
-\end{verbatim}
+
+\input{code/04-for-with-skipped-initialiser}
 
 In the code above, the user is given the opportunity to specify the starting point, and the loop counts from there to 10. Of course, you should always check that the input operation did not fail, and that the user entered a sensible value (in this case, less than 10). I didn't include those steps above since the example is for illustration only!
 
@@ -150,70 +158,36 @@ xor & xor\_eq & & & & \\
 The C++ I/O streams (input/output) library\cite{IOStreams} provides objects which represent entities from which one can read input, and to which one can write output. In the simplest case, the \texttt{std::cin} and \texttt{std::cout} objects are abstractions of the keyboard (terminal input) and the screen (terminal window). Strictly speaking, they are abstractions for the program's standard input and standard output streams, which may be redirected as you've already seen in the Linux session.
 
 As well as allowing you to push data to an output stream, or pull it from an input stream, they provide information about the stream \emph{state}. Once you've attempted an input operation, you can ask the stream if that operation was successful by calling its \texttt{fail()} method:
-\begin{verbatim}
-int i(0);
-std::cin >> i;
-if ( std::cin.fail() )
-{
-  std::cerr << "Failed while attempting to read an integer from";
-  std::cerr << "standard input. Did you type a letter by mistake?\n";
-}
-// Otherwise, use i
-\end{verbatim}
+
+\input{code/05-stream-failure}
 
 If the input operation failed, the stream will be left in an invalid state and subsequent operations are unlikely to succeed. You can clear the state and erase the nonsense left in the stream in the following way:
-\begin{verbatim}
-if ( std::cin.fail() )
-{
-  std::cin.clear();
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), "\n");
-}
-\end{verbatim}
+
+\input{code/06-clearing-stream-failure}
+
 The \texttt{clear()} method resets the stream state, so that subsequent operations will be attempted. The \texttt{ignore()} method skips characters in the input stream. It takes two arguments; the first is a number of characters to skip and the second is a character to stop at. The function will skip one character at a time, until it has skipped the number requested \emph{or} it hits a character matching the second argument. In the case above, it will continue until it skips a newline, or a very large number of characters have been read. See section \ref{numeric-limits} for more information on \texttt{std::numeric\_limits}. For now it is sufficient to know that the statement above requires the \texttt{<limits>} header to be included, and that the \texttt{std::streamsize} type is defined to be an integer whose range is big enough to hold the number corresponding to the maximum size of any single I/O operation.
 
 In the slides for day 1 you were told to use something like:
-\begin{verbatim}
-if ( std::cin.fail() )
-{
-  std::cin.clear();
-  std::cin.ignore(INT_MAX, "\n");
-}
-\end{verbatim}
+
+\input{code/07-clearing-stream-failure-INT_MAX}
+
 This behaves broadly equivalently, except that \texttt{INT\_MAX} is a C macro defined in \texttt{<climits>} (the old C \texttt{<limits.h>}; see table \ref{c-cpp-headers}). Macros should be avoided wherever possible, so the code that uses \texttt{std::streamsize} is preferred.
 
 \section{Numeric Limits}\label{numeric-limits}
 In C, the \texttt{<limits.h>} header provided macros such as \texttt{INT\_MAX} which represents the largest value which can be stored in an \texttt{int}. These are available in C++ through the \texttt{<climits>} header, but there is a better way. The \texttt{<limits>} header provides a mechanism for obtaining information about the limits (min value, max value, etc.) for many different types in a consistent way. If you want the equivalent to \texttt{INT\_MAX}, you'd do something like:
-\begin{verbatim}
-#include <limits>
 
-int main()
-{
-  int biggest = std::numeric_limits<int>::max();
-  std::cout << "The biggest value which can be held in an int is ";
-  std::cout << biggest << std::endl;
-  return 0;
-}
-\end{verbatim}
+\input{code/08-numeric-limits}
 
 \texttt{std::numeric\_limits} provides a lot more information than just the maximum value which can be held. The following code prints the machine epsilon for floating-point numbers. Machine epsilon is an estimate of the error on floating-point numbers, and is computed as the difference between $1.0$ and the smallest value greater than $1.0$ that is representable. Working with values smaller than this is possible, of course, but if you add $1$ to them (for instance), you lose precision. See \cite{Goldberg1991} for more information on floating-point arithmetic and the sources of error.
-\begin{verbatim}
-#include <iostream>
-#include <limits>
 
-int main()
-{
-  std::cout << std::numeric_limits<float>::epsilon() << std::endl;
-  std::cout << std::numeric_limits<double>::epsilon() << std::endl;
-  return 0;
-}
-\end{verbatim}
+\input{code/09-numeric-limits-float}
+
 On a 64-bit AMD Phenom II, this tells me that the machine epsilon for \texttt{float} values is $1.19209\times 10^{-7}$ and for \texttt{double} values it is $2.22045\times 10^{-16}$.
 
 \section{Boolean Literals, Numeric Literals, Character Literals \& String Literals}
 Literals are values which are hard-coded into a program, i.e. written into the source code. In the example below, the integer \texttt{i} is initialised with a literal \texttt{0}.
-\begin{verbatim}
-int i = 0;
-\end{verbatim}
+
+\input{code/10-initialising-int}
 
 Apart from e.g. initialising to zero, it's a good idea to keep numeric literals out of your code by initialising a \texttt{const} variable or using an enumeration. In this way, if the numeric value has to be changed, it need only be changed in one place! Whenever you need a number such as the speed of light, or the mass of an electron, you should define a \texttt{const} variable to hold it, and initialise it to the correct value. If you use that variable everywhere instead of a numeric literal, you'll be able to change it (e.g. to add precision) if necessary (oh, and you're less likely to make a mistake because you're only typing it once!)
 
@@ -222,41 +196,26 @@ Boolean literals are represented using the two C++ keywords \texttt{true} and \t
 
 \subsection{Integer Literals}
 Integer literals can be written in several ways. The simplest is to write the digits of the number as normal (but don't use commas to separate thousands!) The compiler should warn about literals which are too long to represent.
-\begin{verbatim}
-int four = 4;
-int n_bottles = 10;
-int n_red_balloons = 99;
-\end{verbatim}
+
+\input{code/11-integer-literals-decimal}
 
 You can also write integer literals starting with \texttt{0} for octal numbers (base 8) or \texttt{0x} for hexadecimal numbers (base 16). For hexadecimal literals, the letters \texttt{a, b, c, d, e} and \texttt{f} are used to represent the numbers 10 through 15. See appendix \ref{bin-oct-hex} for more details on octal and hexadecimal.
 
-\begin{verbatim}
-int permissions = 0744;
-int sixteen = 0x10;
-int two_hundred_and_fifty_five = 0xff;
-\end{verbatim}
+\input{code/12-integer-literals-other-bases}
 
 The suffix \texttt{U} can be used to write \emph{unsigned} integer literals (values always $\ge 0$) and the suffix \texttt{L} can be used to write \emph{long} integer literals (on most modern platforms, \texttt{int} and \texttt{long} int are the same size anyway).
 
 \subsection{Floating-Point Literals}
 Floating-point literals are, by default, of type \texttt{double}. They can be written in a number of forms, as in the code sample below.
-\begin{verbatim}
-double pi = 3.1415926535897931;
-double c = 3e8;
-double h = 6.63e-34;
-double zero = 0.0;
-\end{verbatim}
+
+\input{code/13-float-literals}
 
 Note that you cannot put spaces in the middle of a floating-point literal, so writing \texttt{6.022 e 23} is invalid. For floating-point literals of type \texttt{float}, use the \texttt{f} or \texttt{F} suffix, and for floating-point literals of type \texttt{long double} use \texttt{l} or \texttt{L}.
 
 \subsection{Character Literals}
 Character literals are represented by a character enclosed in single quotes:
-\begin{verbatim}
-char a = 'a';
-char null = '\0';
-char newline = '\n';
-char at_symbol = '@';
-\end{verbatim}
+
+\input{code/14-char-literals}
 
 The use of character literals instead of their integer equivalents makes programs more portable. For instance, while the ASCII value of the character \texttt{'a'} is 97, using \texttt{'a'} to represent the character will work on computers which use a different character set. Note also that you can include \emph{special} characters such as tabs \verb|'\t'|, newlines \verb|'\n'| and the null character \verb|'\0'| (which is used to terminate C-style strings).
 
@@ -267,66 +226,35 @@ There are many details and issues to worry about when dealing with C-style strin
 
 \section{Declaration, Definition and Initialisation}
 Variables are declared by specifying their type and their name:
-\begin{verbatim}
-int a;
-\end{verbatim}
+
+\input{code/15-declaration}
+
 Variables should \emph{always} be initialised at the point of declaration. This means that you should write 
-\begin{verbatim}
-int a(0);
-\end{verbatim}
+
+\input{code/16-declaration-with-initialisation}
+
 (or whatever sensible initial value the variable should have).
 
 Note that using the \texttt{=} assignment operator is equivalent to using brackets for initialisation, at the point of declaration:
-\begin{verbatim}
-double c = 3e8;
-double h(6.63e-34);
-\end{verbatim}
+
+\input{code/17-initialisation-brackets-vs-equals}
+
 Both variables are correctly initialised, but you should pick one style of initialisation and stick with it, for consistency. The bracketed form is preferred since you can also initialise complex objects in the same way (see the material from week 3 for more on this)!
 
 Functions can (and must!) be both \emph{declared} and \emph{defined}. This can happen in the same place, before the first use of a function, e.g.:
-\begin{verbatim}
-#include <iostream>
 
-void print_help()
-{
-  std::cout << "HELP!\n";
-}
-
-int main()
-{
-  print_help();
-  return 0;
-}
-\end{verbatim}
+\input{code/18-function-declaration-and-definition}
 
 or they may be \emph{forward declared} and defined later:
-\begin{verbatim}
-#include <iostream>
 
-void print_help(); // declaration
-
-int main()
-{
-  print_help();
-  return 0;
-}
-
-void print_help() // definition
-{
-  std::cout << "HELP!\n";
-}
-\end{verbatim}
+\input{code/19-function-forward-declaration}
 
 A function declaration specifies the \emph{signature} (name and argument types) as well as the return type of a function. A function definition specifies the same signature as well as the function body; the code to be executed when that function is called. Later in the course, we split code into multiple files and place function declarations in header files and function definitions in source files which are later linked together.
 
 \section{Comparison of Characters vs. Comparison of Strings}
 Since characters are really just integers, you can compare them using the usual comparison operators, e.g.
-\begin{verbatim}
-char ch(0);
-std::cin >> ch;
-if ( ch == 'q' )
-  exit(1);
-\end{verbatim}
+
+\input{code/20-comparison-chars}
 
 This is not the case for C-strings, which must be compared using functions such as \texttt{strcmp()} from the \texttt{<cstring>} header.
 
@@ -334,96 +262,12 @@ This is not the case for C-strings, which must be compared using functions such 
 In the \emph{special case} where you have a lot of \texttt{if ... else if ... else if ... else} tests, and the values against which you are testing are \emph{integer literals} (which includes characters), you can use the \texttt{switch} statement instead. This has the advantage of reducing the amount of code you have to write, and also has a hidden advantage---the compiler can \emph{optimise} this construct by using a \emph{jump table}, which will be much faster than repeated tests against the conditions of \texttt{if} statements.
 
 The syntax looks something like this:
-\begin{verbatim}
-int month(0);
-std::cin >> month;
 
-switch ( month )
-{
-  case 1:
-    std::cout << "Jan";
-    break;
-  case 2:
-    std::cout << "Feb";
-    break;
-  case 3:
-    std::cout << "Mar";
-    break;
-  case 4:
-    std::cout << "Apr";
-    break;
-  case 5:
-    std::cout << "May";
-    break;
-  case 6:
-    std::cout << "Jun";
-    break;
-  case 7:
-    std::cout << "Jul";
-    break;
-  case 8:
-    std::cout << "Aug";
-    break;
-  case 9:
-    std::cout << "Sep";
-    break;
-  case 10:
-    std::cout << "Oct";
-    break;
-  case 11:
-    std::cout << "Nov";
-    break;
-  case 12:
-    std::cout << "Dec";
-    break;
-  default:
-    std::cout << "Invalid Month";
-    break;
-}
-\end{verbatim}
+\input{code/21-switch-statement}
 
 It is possible to \emph{cascade} through multiple cases by omitting the \texttt{break} keyword:
-\begin{verbatim}
-char option(0);
-std::cin >> option;
 
-switch ( option )
-{
-  case 'a':
-  case 'A':
-  case '+':
-    do_addition();
-    break;
-
-  case 's':
-  case 'S':
-  case '-':
-    do_subtraction();
-    break;
-
-  case 'm':
-  case 'M':
-  case '*':
-    do_multiplication();
-    break;
-
-  case 'd':
-  case 'D':
-  case '/':
-    do_division();
-    break;
-
-  case 'q':
-  case 'Q':
-    std::cout << "Bye!\n";
-    exit(1);
-    break;
-
-  default:
-    std::cout << "Invalid option\n";
-    break;
-}
-\end{verbatim}
+\input{code/22-switch-cascade}
 
 In this way, you can perform one task if one of several cases match. Note that in non-obvious cases where you want the cascade behaviour, you should comment this to prevent future maintainers adding break statements in to ``fix'' your code!
 
@@ -467,12 +311,7 @@ And an example using the alphabetic symbols:
 
 Note that you'll often see hex numbers written with a leading \texttt{0x} or \texttt{\\x}, since this is how they are often represented in programming languages. For example, in C++ a hexadecimal literal is written by using the digits \texttt{0}--\texttt{F}, and prefixing the \texttt{0x} identifier:
 
-\begin{verbatim}
-int two_hundred_and_fifty_five = 0xFF;
-int sixteen = 0x10;
-int ten = 0xA;
-unsigned int biggest_thirty_two_bit_int = 0xFFFFFFFF;
-\end{verbatim}
+\input{code/23-hex-literals}
 
 The observant reader will have noticed that the numeric values (in decimal!) of the powers of 16 (1, 16, 256, 4096) correspond to every fourth term in the sequence of powers of 2. This allows for a neat trick in converting between binary and hexadecimal, and explains why hexadecimal is so popular amongst programmers!
 

@@ -18,7 +18,7 @@ int main()
     if(std::cin.fail())
     {
         std::cin.clear();
-        std::cin.ignore(INT_MAX, "\n");
+        std::cin.ignore(INT_MAX, '\n');
     }
     // NOTES: END INCLUSION
     return 0;

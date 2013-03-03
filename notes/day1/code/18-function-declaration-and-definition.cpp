@@ -4,13 +4,19 @@
  * Run: Y
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
- * Ignore Unused Variables: Y
  */
+
+// NOTES: BEGIN INCLUSION
+#include <iostream>
+
+void print_help()
+{
+    std::cout << "HELP!\n";
+}
 
 int main()
 {
-    // NOTES: BEGIN INCLUSION
-    int i = 0;
-    // NOTES: END INCLUSION
+    print_help();
     return 0;
 }
+// NOTES: END INCLUSION

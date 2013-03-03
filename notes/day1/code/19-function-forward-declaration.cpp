@@ -8,13 +8,17 @@
 
 // NOTES: BEGIN INCLUSION
 #include <iostream>
-#include <limits>
+
+void print_help(); // declaration
 
 int main()
 {
-    int biggest = std::numeric_limits<int>::max();
-    std::cout << "The biggest value which can be held in an int is ";
-    std::cout << biggest << std::endl;
+    print_help();
     return 0;
+}
+
+void print_help() // definition
+{
+    std::cout << "HELP!\n";
 }
 // NOTES: END INCLUSION
