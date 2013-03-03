@@ -8,7 +8,7 @@ cpp-notes.pdf: cpp-notes.tex
 	pdflatex cpp-notes
 
 clean:
-	rm -f *.pdf *.aux *.log
+	rm -f cpp-notes.pdf *.aux *.log *.lot
 	rm -f *.bbl *.blg *.out *.toc
 
 read: cpp-notes.pdf

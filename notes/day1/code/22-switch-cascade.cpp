@@ -7,6 +7,7 @@
  * Input: A
  */
 
+#include <cstdlib>
 #include <iostream>
 
 void do_addition() {}

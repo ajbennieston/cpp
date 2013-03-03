@@ -8,8 +8,8 @@ cpp-notes.pdf: cpp-notes.tex code
 	pdflatex cpp-notes
 
 clean:
-	rm -f *.{pdf,aux,log}
-	rm -f *.{out,bbl,blg,toc}
+	rm -f *.aux *.log *.out *.bbl
+	rm -f *.blg *.toc cpp-notes.pdf
 	$(MAKE) -C code clean
 
 code:

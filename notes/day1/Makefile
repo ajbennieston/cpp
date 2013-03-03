@@ -13,7 +13,9 @@ code:
 	$(MAKE) -C code PROCESS_CODE=../../process-code.py
 
 clean:
-	rm -f *.{pdf,aux,log}
+	rm -f *.aux
+	rm -f *.log
+	rm -f cpp-notes.pdf
 	$(MAKE) -C code clean
 
 read: cpp-notes.pdf
