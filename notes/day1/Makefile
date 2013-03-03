@@ -1,6 +1,6 @@
 all: cpp-notes.pdf
 
-.PHONY: code
+.PHONY: all clean code
 
 cpp-notes.pdf: cpp-notes.tex code 
 	pdflatex cpp-notes
