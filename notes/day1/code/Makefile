@@ -8,7 +8,6 @@ all: $(TEXFILES)
 
 %.tex: %.cpp
 	$(PROCESS_CODE) $^
-	touch code_was_updated
 
 clean:
 	rm -f $(TEXFILES)
