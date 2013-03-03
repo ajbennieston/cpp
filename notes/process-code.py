@@ -70,18 +70,19 @@ def test_file(filename, cxx, cxxflags):
             sys.exit(1)
         if do_run:
             cmd_name = './%s' % filename.replace('.cpp', '')
+            print cmd_name
+            # use subprocess module to pipe stdin to the program
+            p = subprocess.Popen([cmd_name],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT)
             if std_input is not None:
-                # use subprocess module to pipe stdin to the program
-                p = subprocess.Popen([cmd_name],
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT)
                 stdout, stderr = p.communicate(input=std_input)
-                if len(stdout):
-                    print stdout
-                ret = p.returncode
             else:
-                ret = os.system('./%s' % filename.replace('.cpp', ''))
+                stdout, stderr = p.communicate()
+            if len(stdout):
+                print stdout
+            ret = p.returncode
             if run_should_succeed and ret != 0:
                 print 'Run failed for %s ' % filename
                 sys.exit(1)
