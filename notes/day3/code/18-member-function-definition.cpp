@@ -7,6 +7,8 @@
  * Ignore Unused Parameters: Y
  */
 
+// Add stuff below so that the code we want to include
+// actually compiles :)
 typedef void return_type;
 typedef int argument_type;
 
