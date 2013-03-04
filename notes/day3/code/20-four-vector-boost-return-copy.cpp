@@ -22,7 +22,9 @@ class FourVector {
 };
 
 // NOTES: BEGIN INCLUSION
-// Change the four-vector in place
+// - OR -
+
+// Return a modified copy of the four-vector
 FourVector FourVector::boost_z(const double velocity)
 {
     // natural units: c = 1

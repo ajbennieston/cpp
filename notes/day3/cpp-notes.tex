@@ -35,7 +35,22 @@
 %\bibliographystyle{unsrtnat} % `Plain' unsrtnat.bst
 \bibliographystyle{ajbunsrtnat} % Modified unsrtnat.bst to make article titles emphasized
 
-
+% Make code listings look good
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+    basicstyle=\small\ttfamily,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    tabsize=2,
+    extendedchars=true,
+    breaklines=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keywordstyle=\textbf,
+    language=C++
+}
 
 \title{Computing Course Day 3\\
 Notes \& Discussion\\
@@ -88,13 +103,7 @@ xor & xor\_eq & & & & \\
 
 In addition to this, it should be noted that identifiers (variable names, type names, function names, etc.) \emph{must not} begin with a digit (i.e. a number). In fact, they can only start with one of the letters \verb|a-zA-Z| or the underscore \verb|_| (again; avoid underscores at the beginning of identifiers, since these are used internally by the library and compiler implementations). You can, of course, use numeric digits elsewhere in identifiers:
 
-\begin{verbatim}
-double len3vec; // allowed
-double 3veclength; // not allowed
-class 4Vec; // not allowed
-class FourVec; // allowed
-class Vector3; // allowed
-\end{verbatim}
+\input{code/01-digits-in-identifiers}
 
 \section{Compiling and linking}
 The C++ Standard\cite{C++Standard} defines the concept of a translation unit as follows
@@ -137,15 +146,12 @@ Actually, libraries have some file extension such as \verb|.a| or \verb|.so|. Th
 \section{A note on \texttt{main()}}
 The C++ Standard requires that a (C++) program running in a hosted environment (i.e. anything running on top of an operating system and a C++ library) has a global function called \verb|main()|, which is the designated entry point (start) of program execution. The function must have a return type of \verb|int| and implementations must allow the following two forms:
 
-\begin{verbatim}
-int main() { /* ... */ }
-int main(int argc, char* argv[]) { /* ... */ }
-\end{verbatim}
+\input{code/02-valid-main}
 
 Some people like to write the following:
-\begin{verbatim}
-void main() { /* ... */ } // WRONG!
-\end{verbatim}
+
+\input{code/03-invalid-main}
+
 This is \emph{not} allowed by the C++ standard, and therefore \emph{must not} be used!
 
 \section{References}
@@ -153,56 +159,17 @@ A reference to an object is simply another name for the same object. If you have
 
 There are several reasons this is useful. The first is so that a function can make changes to its argument, without having to have access to the scope in which the argument was initially defined, and without using pointers.
 
-\begin{verbatim}
-void addFour(int& Bill)
-{
-  bill += 4;
-}
-
-int main()
-{
-  int bob = 2;
-  int fred = 3;
-  addFour(bob); // bob now has the value 6
-  addFour(fred); // fred now has the value 7
-  /* ... */
-}
-\end{verbatim}
+\input{code/04-reference-example}
 
 The second reason is to avoid passing large objects by value (and to avoid the mess of dealing with pointers). The example below illustrates this with a standard library vector (which you'll learn more about in day 4):
 
-\begin{verbatim}
-void sortAndReverse(std::vector<int>& v)
-{
-  std::sort(v.begin(), v.end());
-  std::reverse(v.begin(), v.end());
-}
-
-int main()
-{
-  std::vector<int> bigVector(100000);
-  
-  // code to fill the massive vector
-  // with meaningful data goes here
-
-  sortAndReverse(bigVector);
-
-  // more code here
-}
-\end{verbatim}
+\input{code/05-references-large-arguments}
 
 If this vector was passed by value, not only would there be a lot of memory used to make a copy of the vector, but the function would only operate on the copy, which would be discarded when the function returns. References help in two ways: passing by reference avoids making a second copy of the huge vector, and passing by reference allows the function to operate on the original, so that the changes persist when the function itself has returned.
 
 Of course, you can pass \verb|const| references if you want to avoid the copy overhead for large objects, but don't want a function to be able to change your object:
 
-\begin{verbatim}
-std::pair<int, int> minmax_sorted_vector(const std::vector<int>& v)
-{
-  int min = v.first();
-  int max = v.last();
-  return std::make_pair(min, max);
-}
-\end{verbatim}
+\input{code/06-minmax-of-sorted-vector}
 
 \section{Notes on exercise 1}
 The purpose of exercise 1 was to start writing a program from a `blank slate'. The emphasis was on writing two functions---one to calculate the space-time interval (squared) of a four-vector, and the other to boost a four-vector. Even in this relatively straightforward task, there were a number of \emph{design decisions} which had to be addressed, though the ultimate structure of the program would be similar regardless of the choice...
@@ -239,64 +206,40 @@ Alternative implementations may use arrays, or the \verb|std::vector<double>| st
 \subsection{\texttt{const}}
 There was a lot of scope for using the \verb|const| keyword here. Assuming the four-vector components were held in doubles, the function signatures could have looked something like this:
 
-\begin{verbatim}
-double interval(const double t, const double x,
-                const double y, const double z);
-
-// underscore suffix denotes primed variables
-double boost_z(const double t, const double x, const double y,
-               const double z, double& t_, double& x_, double& y_,
-               double& z_, const double velocity);
-\end{verbatim}
+\input{code/07-using-const}
 
 Note that the \emph{const} keyword can be used in two positions, with identical meaning:
 
-\begin{verbatim}
-const double t;
-double const t;
-\end{verbatim}
+\input{code/08-placement-of-const}
 
 The first form is generally preferred in the C++ community, while the C community will often use the second form.
 
 While we're on the topic of const, bear in mind that when we're dealing with \emph{pointer types}, there are two places where \emph{const} can apply with different meanings. The first is as follows:
 
-\begin{verbatim}
-const double * ptr;
-double const * ptr; // equivalent
-\end{verbatim}
+\input{code/09-pointer-to-const}
 
 Again, the first form is preferred. This says that we have a pointer to a const double. That is, you cannot change the value of the double by accessing it through a pointer, but the pointer \emph{itself} is not const! You can change the pointer, so that it points somewhere else (but you still cannot change the value of that something else, through this pointer).
 
 The second use is as follows:
 
-\begin{verbatim}
-double * const ptr;
-\end{verbatim}
+\input{code/10-const-pointer}
 
 This marks the \emph{pointer itself} as const, which means that you can't change where the pointer points (but you can change the value of the double that is being pointed to!)
 
 Finally, you can combine the two:
-\begin{verbatim}
-const double * const ptr;
-double const * const ptr; // equivalent
-\end{verbatim}
+
+\input{code/11-const-ptr-to-const}
 
 Hopefully you begin to see why the first form is preferred; in the second form the two const keywords seem to be too close together! Anyway, what this means is that \verb|ptr| is a pointer (which you cannot change to point elsewhere) to a double which you cannot change. While const-pointers and const-pointers-to-const are rare, they do sometimes show up, so it helps to be aware of what they mean! Be sure to distinguish between \emph{pointer-to-const} (the thing pointed to is const; a fairly common scenario) and \emph{const-pointer} (the pointer itself is const; much more rare!)
 
 \subsection{A few words on \texttt{std::endl}}
 The \verb|std::endl| entity exists to write a newline character and flush the output stream to which it is applied. You can use it in conjunction with \verb|std::cout| as follows:
 
-\begin{verbatim}
-double h = 6.626e-34;
-std::cout << h << std::endl;
-\end{verbatim}
+\input{code/12-std-endl}
 
 Note that if you don't need to flush the stream (which forces writes to occur before the program can move on) you can use the following instead:
 
-\begin{verbatim}
-double c = 3e8;
-std::cout << c << "\n";
-\end{verbatim}
+\input{code/13-cout-newline}
 
 This allows the streams library to flush the buffers when it decides to, which is usually better optimised. However, if you absolutely must have output occur before some subsequent step (input, for example) then be sure to use \verb|std::endl| to flush the output stream.
 
@@ -310,53 +253,21 @@ Notes:
 \section{Structures}
 Although \verb|structs| were introduced as being distinct from \verb|class|es, C++ treats the two identically, with the exception that \verb|structs| are \emph{implicitly public}. That is,
 
-\begin{verbatim}
-struct Point {
-  double x;
-  double y;
-};
-
-// is identical to
-
-class Point {
-  public:
-    double x;
-    double y;
-};
-\end{verbatim}
+\input{code/14-struct-public-class}
 
 In general, you should use the \verb|class| keyword and define the visibility (public or private) yourself. Avoid using \verb|struct| for anything more complicated than a set of related data; if you have member functions you should probably use the \verb|class| keyword to avoid confusing yourself and others (since, in C, \verb|struct|s could not have member functions).
 
 \section{Notes on exercise 2}
 The only difference between exercises 1 and 2 is that the function signatures can be tidied up a bit by declaring a struct to hold the components of a four-vector and using member access notation when manipulating the variables. Remember that a struct counts as a single entity (object) and can be passed as a function argument or used as a function return value, e.g.:
 
-\begin{verbatim}
-struct FourVector {
-  double t;
-  double x;
-  double y;
-  double z;
-};
-
-double interval(const FourVector& vec);
-FourVector boost_z(const FourVector& vec, const double velocity);
-\end{verbatim}
+\input{code/15-struct-fourvector}
 
 We now pass the \verb|FourVector| object by reference-to-const in order to avoid copying four doubles whenever we call the functions. This is generally a good idea when you don't need a local \emph{copy}, and the object you're passing around is bigger than a single integer.
 
 \section{Member functions}
 Member functions have access to the private parts of a class. Every time you call a member function of an object, the member function is bound to the instance of the object on which it was called. The special pointer \verb|this| exists within member functions, and is always a pointer to the object instance on which the function was called. In the example below, two member functions are declared. Both have the same behaviour, but one accesses the private variables through the \verb|this| pointer, for illustration.
 
-\begin{verbatim}
-class Foo {
-  public:
-    Foo() : x(4) {}
-    int squareMe() { return x*x; }
-    int getSquaredValue() { return this->x * this->x; }
-  private:
-    int x;
-};
-\end{verbatim}
+\input{code/16-member-functions}
 
 It is usually not necessary to use the \verb|this->x| form, though it can make it clearer in some cases that you are accessing a member variable or member function, instead of a local variable or free (non-member) function. In addition, you can use \verb|this| when you want to return a pointer or reference to the instance in which you are working.
 
@@ -365,28 +276,7 @@ Despite member functions being bound to the object on which they are called, the
 \subsection{Definition of member functions}
 Member functions can be defined at the point of declaration (i.e. within the class declaration) or at some later time (i.e. outside the class declaration). The example below declares four member functions, defining two inside the class declaration and two below it.
 
-\begin{verbatim}
-class Vector2D {
-  public:
-    double getX() const { return x; }
-    double getY() const { return y; }
-    double getR() const;
-    double getTheta() const;
-  private:
-    double x;
-    double y;
-}
-
-double Vector2D::getR() const
-{
-    return sqrt(x*x + y*y);
-}
-
-double Vector2D::getTheta() const
-{
-    return atan2(y, x);
-}
-\end{verbatim}
+\input{code/17-vector2d}
 
 Member functions defined within the class declaration are candidates for \emph{inlining}. This is a process by which the compiler can optimise (at its discretion) function calls by replacing the call by the code from the function. This avoids several overheads associated with the function call mechanism, at the cost of increasing the resulting code size.
 
@@ -396,94 +286,29 @@ Generally, only \emph{very small} functions should be defined within the class d
 
 Finally, note that member functions which are defined outside of the class declaration have to be defined in the scope of the class. The scope resolution operator \verb|::| is used to do this by naming the class before the function itself.
 
-\begin{verbatim}
-return_type ClassName::function_name(argument_type argument_name, ...)
-{
- // ...
-}
-\end{verbatim}
+\input{code/18-member-function-definition}
 
 \section{Notes on exercise 3}
 Essentially you can use the same code as before, but make \verb|interval()| and \verb|boost_z()| member functions. To do this, declare them inside the class declaration, and define them in the scope of the class, as described above. The important thing to notice is that you no longer need to pass the variables in; the member function will be bound to the \verb|FourVector| object it was called on, and will have access to the private variables.
 
 There is another design choice now; \verb|boost_z()| can do one of several things. The main options are to have it boost the vector on which it was called, thus changing the variables in-place, or to have it return a boosted version of itself. Both implementations are shown below. Note that we need to make a temporary copy of the first variable we change, so that the original value is used when we change the second one.
 
-\begin{verbatim}
-
-// Change the four-vector in place
-void FourVector::boost_z(const double velocity)
-{
-  double original_t = t;
-  double gamma = 1.0 / sqrt(1.0 - velocity*velocity); // natural units, c=1
-  t = gamma * ( t - velocity * z); // again, c=1
-  z = gamma * ( z - velocity * original_t); // c=1, still!
-}
-
-// or return a boosted copy of ourselves
-// which has been constructed using boosted variables
-FourVector FourVector::boost_z(const double velocity) const
-{
-  double gamma = 1.0 / sqrt(1.0 - velocity * velocity);
-  double t2 = gamma * ( t - velocity * z );
-  double z2 = gamma * ( z - velocity * t );
-  return FourVector(t2, x, y, z2); // Return a FourVector
-}
-\end{verbatim}
+\input{code/19-four-vector-boost-inplace}
+\input{code/20-four-vector-boost-return-copy}
 
 Note that because the version which returns a boosted copy doesn't modify the original, we can mark it as a \emph{const member function}.
 
 \section{\texttt{const} member functions}
 Member functions can be marked \emph{const} by placing the \verb|const| keyword after the argument list (see example below). The effect this has is twofold. First, it provides a guarantee to the caller that this function \emph{will not change} the state of the object on which it is called (it won't change any of the member variables). This is enforced by the compiler. The second effect is that it can be called when you have a const object, or a reference-to-const or pointer-to-const object. In fact, if you have one of those, you can \emph{only} call const member functions on it!
 
-\begin{verbatim}
-class Point {
-  public:
-    Point() : x(0.0), y(0.0) {}
-    double getX() const { return x; }
-    double getY() const { return y; }
-    double doSomething() const
-    {
-        x = 4; // Compile error
-        // trying to change a member variable
-        // inside a const member function!
-    }
-    void setX(double x_) { x = x_; }
-    void setY(double y_) { y = y_; }
-  private:
-    double x;
-    double y;
-};
-
-int main()
-{
-  const Point pt;
-  std::cout << pt.getX() << "\n"; // Allowed
-  // since getX() is a const member function
-
-  pt.setY(4.2); // Compile error; cannot call
-  // a non-const member function on a const object
-
-  /* ... */
-}
-\end{verbatim}
+\input{code/21-const-member-functions}
 
 \subsection{\texttt{mutable} member variables}
 Sometimes, it can be useful to be able to make changes to a member variable even though you only have a const object. Equivalently, you may have a member function which is logically const; that is, to an outside observer it shouldn't appear to change anything in the object, but that has to make some undetectable internal change in order to function. Such situations are \emph{extremely} rare, but they do occur.
 
 Consider, for (a somewhat contrived) example, a situation where you want to count how many times your \verb|getX()| member function was called on each object. You would have to put a counter inside the object, and have \verb|getX()| increment it on every call. But \verb|getX()| should be a const member function; not only is there no externally visible reason for it to change the state, it is also useful to be able to call \verb|getX()| when you have a reference-to-const object; e.g. in a copy constructor or copy assignment operator. In order to have the desired behaviour, then, we need to do something along the lines of:
 
-\begin{verbatim}
-class FourVector {
-  public:
-    /* ... */
-    double getX() const { ++useCount; return x; }
-  
-  private:
-    /* ... */
-    double x;
-    mutable int useCount;
-};
-\end{verbatim}
+\input{code/22-mutable}
 
 The \verb|mutable| keyword tells the compiler that this member variable can be changed; even within a const member function. It allows us to make internal changes such as reference counting without sacrificing the \emph{logical constness} of the interface!
 
@@ -492,55 +317,15 @@ The compiler will provide implicit definitions for the default constructor, copy
 
 The default constructor is one which takes no arguments (or, equivalently, defines default values for its arguments). For example, in the code below class A has a default constructor which is implicitly defined by the compiler. Class B has no default constructor, and class C has an explicitly defined default constructor.
 
-\begin{verbatim}
-class A {
-  public:
-    double getX() const { return x; }
-    void setX(const double x_) { x = x_; }
-  private:
-    double x;
-};
-
-class B {
-  public:
-    B(const double initial_value)
-     : x(initial_value) {}
-    double getX() const { return x; }
-    void setX(const double x_) { x = x_; }
-  private:
-    double x;
-};
-
-class C {
-  public:
-    C() : x(0.0) {}
-    C(const double initial_value)
-     : x(initial_value) {}
-    double getX() const { return x; }
-    void setX(const double x_) { x = x_; }
-  private:
-    double x;
-};
-\end{verbatim}
+\input{code/23-default-ctors}
 
 Unless explicitly defined, the compiler will also produce a \emph{copy constructor}. The copy constructor should take the form:
 
-\begin{verbatim}
-T::T(const T&);
-\end{verbatim}
+\input{code/24-form-of-copy-ctor}
 
 for a type T. An example follows.
 
-\begin{verbatim}
-class Foo {
-  public:
-    /* ... */
-    Foo(const Foo& rhs)
-     : x(rhs.x) {}
-  private:
-    double x;
-};
-\end{verbatim}
+\input{code/25-copy-ctor}
 
 The implicitly defined copy constructor will perform a \emph{bitwise copy} of the object in question. This sometimes works (where all member variables are plain data types) but is often not the correct behaviour. If one or more members are of pointer type, usually deep-copy or other copy semantics are required. Such behaviour has to be implemented in a user-defined copy constructor.
 
@@ -549,113 +334,26 @@ The destructor will always be implicitly defined unless it has been specified ex
 \subsection{Initialiser lists}
 Constructors can take \emph{initialiser lists}, which initialise the member variables according to the values or expressions in the list. This is preferred over assignment in the body of the constructor, since the variables have to be initialised anyway before code in the constructor body can be run. In other words, assignment in the constructor body means that the variables are created and default-initialised, then another value is assigned over them. This is obviously inefficient, so initialiser lists should be preferred. See the example below.
 
-\begin{verbatim}
-class Point {
-  public:
-    Point(const double x_, const double y_)
-    {
-      x = x_; y = y_;
-      // Inefficient! x and y have been
-      // initialised, then assigned
-    }
-  private:
-    double x;
-    double y;
-};
-
-class BetterPoint {
-  public:
-    BetterPoint(const double x_, const double y_)
-      : x(x_), y(y_) {}
-  private:
-    double x;
-    double y;
-};
-\end{verbatim}
+\input{code/26-init-lists}
 
 The member variables will always be initialized in the order in which they were declared in the class. Most compilers will warn if your initializer list uses a different ordering.
 
 Within an initializer list, member variables and constructor arguments may have the same name. Variables being initialized are taken to be member variables, while variables used in the initialization expressions are taken to be constructor arguments. This is, however, confusing and should be avoided.
 
-\begin{verbatim}
-class ConfusingPoint {
-  public:
-    ConfusingPoint(const double x, const double y)
-      : x(x), y(y) {}
-  private:
-    double x;
-    double y;
-};
-\end{verbatim}
+\input{code/27-ctor-args-with-same-names-as-member-vars}
 
 \subsection{Explicit constructors: Avoiding implicit type conversions}
 Consider the following code:
-\begin{verbatim}
-#include <iostream>
 
-class Foo {
-  public:
-    Foo(const double& x)
-    : var(x*x + 2*x + 1) {}
-	
-    double getVar() const { return var; }
-
-  private:
-    double var;
-};
-
-void printValue(const Foo& bar)
-{
-  std::cout << bar.getVar() << std::endl;
-}
-
-int main()
-{
-  Foo my_foo(4);
-  double my_double(1);
-
-  printValue(my_foo);
-  printValue(my_double);
-
-  return 0;
-}
-\end{verbatim}
+\input{code/28-non-explicit-ctor}
 
 You might expect that the second call to printValue() would result in a compiler error, since the type \texttt{double} is not the same as the type \texttt{Foo}. This example actually compiles without any warnings!
 
 The reason is that constructors which take a single argument can be used by the compiler to perform \emph{implicit type conversions}. That is, the function \texttt{printValue()} expects to receive a reference to \texttt{const Foo}, but it's being given a \texttt{double} instead. Instead of giving up right away, the compiler tries to find a way to turn a \texttt{double} into a \texttt{Foo} object, and we've given it just such a way with the constructor \texttt{Foo(const double\&)}.
 
 This is probably not the behaviour we wanted; after all, one of the strengths of C++ is that it has a strong type system, which we just broke by allowing the compiler to decide to convert \texttt{double} objects to \texttt{Foo} objects whenever it sees fit. Luckily, we can prevent this by telling the compiler that we have an \emph{explicit constructor}. An explicit constructor can never be used by the compiler for implicit type conversion, and it will only be used when you write code that explicitly makes use of the constructor. Here's the example again with an explicit constructor:
-\begin{verbatim}
-#include <iostream>
 
-class Foo {
-  public:
-    explicit Foo(const double& x)
-    : var(x*x + 2*x + 1) {}
-	
-    double getVar() const { return var; }
-
-  private:
-    double var;
-};
-
-void printValue(const Foo bar)
-{
-  std::cout << bar.getVar() << std::endl;
-}
-
-int main()
-{
-  Foo my_foo(4);
-  double my_double(1);
-
-  printValue(my_foo);
-  printValue(my_double);
-
-  return 0;
-}
-\end{verbatim}
+\input{code/29-explicit-ctor}
 
 This time, the compiler gives us an error message:
 \begin{verbatim}
@@ -665,36 +363,8 @@ trial.cc:25: error: conversion from `double' to non-scalar type `Foo' requested
 \end{verbatim}
 
 And finally, the same code but making use of the explicit constructor to force the type conversion to occur:
-\begin{verbatim}
-#include <iostream>
 
-class Foo {
-  public:
-    explicit Foo(const double& x)
-    : var(x*x + 2*x + 1) {}
-	
-    double getVar() const { return var; }
-
-  private:
-    double var;
-};
-
-void printValue(const Foo bar)
-{
-  std::cout << bar.getVar() << std::endl;
-}
-
-int main()
-{
-  Foo my_foo(4);
-  double my_double(1);
-
-  printValue(my_foo);
-  printValue(Foo(my_double));
-
-  return 0;
-}
-\end{verbatim}
+\input{code/30-explicit-conversion}
 
 Generally speaking you should be careful when defining constructors which have a single argument. If you want to allow the compiler to convert from the argument type to the type your constructor is for, then everything is fine. If you'd rather decide for yourself when you want type conversions, and want to stop the compiler guessing when you meant to convert, and when you just made a mistake, you should label your single-argument constructors as \texttt{explicit}.
 
@@ -703,53 +373,29 @@ Operator overloading can be confusing at first. The trick is to identify whether
 
 Here, I'll consider the same two examples as the exercise; \verb|operator+=| and \verb|operator+|.  The first thing to do is look at how the operators would be used. Let's use integers (which have the operators built in) to illustrate this.  
 
-\begin{verbatim}
-int i = 4;
-i += 2; // i now has the value 6
-int j = 4;
-int k;
-k = i + j;
-\end{verbatim}
+\input{code/31-operators-on-ints}
 
 Actually, we've introduced the copy assignment operator, \verb|operator=| as well, so we now have three things to consider. Looking at the first line, we see that the copy assignment operator is a binary operator which takes some right-hand side value (\emph{rvalue}) and assigns that value to the left-hand side (\emph{lvalue}). In order to do this, \verb|operator=| is best implemented as a member function.
 
 When an operator is implemented as a member function, the lvalue is always the object on which it was called, while the rvalue is passed as an argument to the function. One possible \verb|operator=| declaration for a class \verb|Foo| looks like this:
 
-\begin{verbatim}
-Foo& Foo::operator=(const Foo& rhs);
-
-// allows us to do something along the lines of...
-Foo a;
-Foo b;
-b = a;
-\end{verbatim}
+\input{code/32-assignment-operator}
 
 The solution code for the exercises from day 3 includes an implementation of the copy-assignment operator, including a check to avoid self-assignment. Self-assignment in the best-case is a waste of time (if you're already you, you don't need to copy yourself over yourself in order to be you again!) and in the worst-case scenario it can result in memory leaks.
 
 Next, we have \verb|operator+=|, which represents \emph{addition with assignment} and is again best implemented as a member function (so that it has access to the private member variables). It will look rather similar to the copy assignment operator;
 
-\begin{verbatim}
-Foo& Foo::operator+=(const Foo& rhs);
-\end{verbatim}
+\input{code/33-addition-with-assignment}
 
 In both of the cases above, we return a reference to Foo. In fact, we return \verb|*this|, which is a reference to the object on which the operator was called. This allows us to chain operators in a meaningful way.  
 
 Finally, let's consider \verb|operator+|. Looking at the code below (and assuming \verb|a|, \verb|b| and \verb|c| are all objects of type \verb|Foo|) we can see that this is really rwo different things...
 
-\begin{verbatim}
-c = a + b;
-\end{verbatim}
+\input{code/34-addition}
 
 First, we have to deal with the expression \verb|a + b|. To do this we'll define a free function (i.e. not a member function) which takes two arguments (left-hand and right-hand side of the operator). We don't know what the program is going to do with the result, so we have to make a temporary variable to hold the result of adding \verb|b| to \verb|a|, then return that temporary:
 
-\begin{verbatim}
-Foo operator+(const Foo& lhs, const Foo& rhs)
-{
-  Foo temp(lhs);
-  temp += rhs;
-  return temp;
-}
-\end{verbatim}
+\input{code/35-operator-plus}
 
 There are a few things to be aware of here. First, we create a temporary using the copy constructor, so \verb|temp| now holds a copy of whatever the left-hand side of the expression was. Then, we use the addition-with-assignment operator which we've already implemented, to add the right-hand side to the temporary. This is done so that if we were to change what it means to add two \verb|Foo| objects together, we only have to change \verb|operator+=| and we get the changes in \verb|operator+| for free! Finally, we return \verb|temp| by value. We can't return a reference to it because the local copy will be destroyed when the function returns.
 
@@ -757,21 +403,7 @@ Now, we have a temporary \verb|Foo| resulting from the \verb|a + b| expression. 
 
 If the types of the LHS and RHS differ, you can write two versions of the free operators, one with type A on the LHS, and one with type B on the LHS. An example for multiplying a FourVector by a double (to scale the vector) follows:
 
-\begin{verbatim}
-FourVector operator*(const FourVector& lhs, const double& rhs)
-{
-  FourVector tmp(lhs);
-  tmp *= rhs;
-  return tmp;
-}
-
-FourVector operator*(const double& lhs, const FourVector& rhs)
-{
-  FourVector tmp(rhs);
-  tmp *= lhs;
-  return tmp;
-}
-\end{verbatim}
+\input{code/36-symmetric-operators}
 
 Obviously it only makes sense to do this for commutative operations such as multiplication by a scalar...
 
@@ -785,10 +417,7 @@ In order to allow this, C++ has the notion of \emph{friends}. If, within your cl
 \section{Streaming operators}\label{sec:streaming-operators}
 When I introduced operators, I also introduced the streaming operators. These are rather unusual looking things:
 
-\begin{verbatim}
-std::istream& operator>>(std::istream& in, FourVector& vec);
-std::ostream& operator<<(std::ostream& out, const FourVector& vec);
-\end{verbatim}
+\input{code/37-streaming-operators}
 
 These two functions allow us to stream into and out of \verb|FourVector| objects just like doubles or any other built-in type. For example,
 
@@ -803,54 +432,17 @@ The signature of these functions must be exactly as shown. When you write \newli
 
 A reference to the stream object is returned so that you can chain streaming operations with the usual syntax of repeating \verb|<<| or \verb|>>|. Here is one possible definition of the input operator for a \verb|FourVector|:
 
-\begin{verbatim}
-std::istream& operator>>(std::istream& stream, FourVector& vec)
-{
-  double t, x, y, z;
-  stream >> t >> x >> y >> z;
-  vec.setT(t);
-  vec.setX(x);
-  vec.setY(y);
-  vec.setZ(z);
-  return stream;
-}
-\end{verbatim}
+\input{code/38-input-streaming-operator}
 
 Note that we have to make four doubles to read into, then set the member variables using the public interface of \verb|FourVector|. This is because we don't have access to the private members, and we cannot write the streaming operators as member functions because we need the stream itself to be the left-hand side, and with member operators the object is always the left-hand side.
 
 We can, however, make use of the \verb|friend| keyword, as follows:
 
-\begin{verbatim}
-class FourVector {
-  public:
-    /* ... */
-    friend operator>>(std::istream&, FourVector&);
-    /* ... */
-
-  private:
-    double t;
-    double x;
-    double y;
-    double z;
-};
-
-std::istream& operator>>(std::istream& stream, FourVector& vec)
-{
-  stream >> vec.t >> vec.x >> vec.y >> vec.z;
-  return stream;
-}
-\end{verbatim}
+\input{code/39-friend-input-operator}
 
 This is clearly more efficient, since the friend operator has direct access to the private member variables, but it violates encapsulation! Note that the \emph{output} streaming operator doesn't need to be a friend since it's just as efficient to use \verb|getX()| and related member functions; especially if they are declared inline and return references! The output streaming operator will therefore look something like:
 
-\begin{verbatim}
-std::ostream& operator<<(std::ostream& stream, const FourVector& vec)
-{
-  stream << "(" << vec.getT() << ", " << vec.getX();
-  stream << ", " << vec.getY() << ", " << vec.getZ() << ")";
-  return stream;
-}
-\end{verbatim}
+\input{code/40-output-operator}
 
 Note that I've included some additional formatting in the output to separate the components of the four-vector when displayed.
 
