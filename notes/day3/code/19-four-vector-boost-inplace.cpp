@@ -4,6 +4,7 @@
  * Run: Y
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
+ * Ignore Unused Private Variables: Y
  */
 
 #include <cmath>

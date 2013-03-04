@@ -33,6 +33,7 @@ def test_file(filename, cxx, cxxflags):
     run_should_succeed = False
     ignore_unused_variables = False
     ignore_unused_parameters = False
+    ignore_unused_privates = False
     std_input = None
 
     in_first_comment = False
@@ -54,6 +55,8 @@ def test_file(filename, cxx, cxxflags):
             ignore_unused_variables = True
         elif 'ignore unused parameters: y' in ll:
             ignore_unused_parameters = True
+        elif 'ignore unused private variables: y' in ll:
+            ignore_unused_privates = True
         elif 'input' in ll:
             parts = line.split(':')
             std_input = parts[1]
@@ -68,6 +71,8 @@ def test_file(filename, cxx, cxxflags):
             command += ' -Wno-unused-variable'
         if ignore_unused_parameters:
             command += ' -Wno-unused-parameter'
+        if ignore_unused_privates:
+            command += ' -Wno-unused-private-field'
         print command
         ret = os.system(command)
         if compile_should_succeed and ret != 0:
