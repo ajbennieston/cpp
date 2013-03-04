@@ -32,6 +32,7 @@ def test_file(filename, cxx, cxxflags):
     do_run = False
     run_should_succeed = False
     ignore_unused_variables = False
+    ignore_unused_parameters = False
     std_input = None
 
     in_first_comment = False
@@ -51,6 +52,8 @@ def test_file(filename, cxx, cxxflags):
             run_should_succeed = True
         elif 'ignore unused variables: y' in ll:
             ignore_unused_variables = True
+        elif 'ignore unused parameters: y' in ll:
+            ignore_unused_parameters = True
         elif 'input' in ll:
             parts = line.split(':')
             std_input = parts[1]
@@ -63,6 +66,8 @@ def test_file(filename, cxx, cxxflags):
         command += ' %s' % filename
         if ignore_unused_variables:
             command += ' -Wno-unused-variable'
+        if ignore_unused_parameters:
+            command += ' -Wno-unused-parameter'
         print command
         ret = os.system(command)
         if compile_should_succeed and ret != 0:

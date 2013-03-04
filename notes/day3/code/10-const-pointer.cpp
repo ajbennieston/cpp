@@ -10,8 +10,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    const double t1;
-    double const t2;
+    double * const ptr;
     // NOTES: END INCLUSION
     return 0;
 }
