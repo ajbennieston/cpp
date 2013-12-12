@@ -15,7 +15,7 @@ Current(s?)
 -----------
 At present, this is a work in progress. The first commit reflects the state of the material at the end of the 2011 run of the course, but subsequent commits fix various bugs, typos and other bad things. Over time, the changes should become more substantial.
 
-License
--------
+Licenses
+--------
 Code within this repository is released under the BSD license.
 Documentation within this repository is released under a licence based on the FreeBSD Documentation License. See the LICENSE file for details.
