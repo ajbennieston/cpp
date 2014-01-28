@@ -35,6 +35,7 @@ def test_file(filename, cxx, cxxflags):
     ignore_unused_parameters = False
     ignore_unused_privates = False
     std_input = None
+    cmd_args = None
 
     in_first_comment = False
     for line in open(filename, 'r'):
@@ -60,6 +61,9 @@ def test_file(filename, cxx, cxxflags):
         elif 'input' in ll:
             parts = line.split(':')
             std_input = parts[1]
+        elif 'arguments' in ll:
+            arglist = line.split(':')
+            cmd_args = arglist[1].split()
         else:
             continue # ignore other comment lines
 
@@ -79,10 +83,13 @@ def test_file(filename, cxx, cxxflags):
             print 'Compile failed for %s ' % filename
             sys.exit(1)
         if do_run:
-            cmd_name = './%s' % filename.replace('.cpp', '')
+            cmd_name = ['./%s' % filename.replace('.cpp', '')]
+            if cmd_args is not None:
+                for arg in cmd_args:
+                    cmd_name.append(arg)
             print cmd_name
             # use subprocess module to pipe stdin to the program
-            p = subprocess.Popen([cmd_name],
+            p = subprocess.Popen(cmd_name,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT)

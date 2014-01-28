@@ -2,7 +2,7 @@ all: cpp-notes.pdf
 
 .PHONY: all clean code
 
-cpp-notes.pdf: cpp-notes.tex code
+cpp-notes.pdf: cpp-notes.tex bibliography.bib code
 	pdflatex cpp-notes
 	pdflatex cpp-notes
 	bibtex cpp-notes

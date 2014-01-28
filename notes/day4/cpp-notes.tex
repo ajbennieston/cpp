@@ -35,6 +35,23 @@
 %\bibliographystyle{unsrtnat} % `Plain' unsrtnat.bst
 \bibliographystyle{ajbunsrtnat} % Modified unsrtnat.bst to make article titles emphasized
 
+% Make code listings look good
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+    basicstyle=\small\ttfamily,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    tabsize=2,
+    extendedchars=true,
+    breaklines=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keywordstyle=\textbf,
+    language=C++
+}
+
 \title{Computing Course Day 4\\
 Notes \& Discussion\\
 Second Edition}
@@ -60,185 +77,56 @@ In order to use the standard file streams, you will need to include the header \
 
 \subsubsection{Opening files}
 There are two ``basic'' ways to open a file. The first is to construct an \verb|std::ifstream| or \verb|std::ofstream| object (depending on whether you want to read from the file, or write to it) with a filename (as a \verb|const char*|):
-\begin{verbatim}
-const char* filename = "myFile.dat";
-std::ifstream inputFile(filename);
-\end{verbatim}
+\input{code/01-open-file-from-ctor}
 
-The second way is to default-construct an \verb|std::ifstream| or \verb|std::ofstream| object, then call the \verb|open()| method:
-\begin{verbatim}
-std::ofstream log;
-const char* filename;
+The second way is to default-construct an \verb|std::ifstream| or \verb|std::ofstream| object, then call the \verb|open()| member function:
+\input{code/02-open-file-after-ctor}
 
-if ( someCondition )
-  filename = "log1.out";
-else
-  filename = "log2.out";
-
-log.open(filename);
-\end{verbatim}
-
-Note that this method allows you to create the file in the current scope while opening it with a name which is determined in some inner scope. This is potentially useful if you want to call a file something different, based on some logic within the program. The alternative would be to do something like:
-\begin{verbatim}
-std::ostream* log;
-if ( someCondition )
-  log = new std::ofstream("log1.out");
-else
-  log = new std::ofstream("log2.out");
-// more code here
-delete log; // remember to free memory!
-\end{verbatim}
+Note that this approach allows you to create the file in the current scope while opening it with a name which is determined in some inner scope. This is potentially useful if you want to call a file something different, based on some logic within the program. The alternative would be to do something like:
+\input{code/03-nasty-pointer-semantics-with-fstream}
 
 This has two major disadvantages; firstly, you have to use pointer semantics when dealing with the stream, and secondly you have to remember to delete the object when you're done with it.
 
 However you choose to open files, you should \emph{always} check that the operation succeeded. There could be any number of reasons that the system may fail to open a file; perhaps it is not there, or you don't have permission to access it...
 
 In order to check whether the file was opened successfully, you can do something like:
-\begin{verbatim}
-std::ofstream log("log.out");
-if ( ! log.is_open() )
-{
-  // Something went wrong. Deal with it, somehow.
-}
-\end{verbatim}
+\input{code/04-checking-open-file}
+
 Where the code corresponding to ``deal with it, somehow'' will depend on the context of your program; it could display a warning and exit, it could throw an exception, it could try to recover silently, or it could do something else altogether!
 
 \subsubsection{Closing files}
-Files are closed automatically when the \verb|fstream| object goes out of scope or is deleted. To manually close a file stream, call the \verb|close()| method:
-\begin{verbatim}
-std::ofstream log("log.out");
-log << "Hello, log world!\n";
-log.close();
-\end{verbatim}
+Files are closed automatically when the \verb|fstream| object goes out of scope or is deleted. To manually close a file stream, call the \verb|close()| member function:
+\input{code/05-closing-file}
 
 The example above also shows how one can use file streams, i.e. identically to any other kind of C++ stream!
 
 \subsubsection{Reading lines \& dealing with end-of-file}
 When reading from \verb|std::ifstream| objects, it is quite possible that one will eventually hit the end of the file. When this happens, C++ sets a boolean flag which can be queried using the \verb|eof()| member function. \verb|eof()| returns true if the end of the file has been seen. The only problem here is that \verb|eof()| is not set until after the program encounters the end of the file. This can result in the last line of the file being processed twice if one checks for \verb|eof()| before reading, then processes the data. The solution is to try a read, then see whether it succeeded - if \verb|in.eof()| is true, or equivalently \verb|in.good()| returns false (for an \verb|ifstream| called \verb|in|), then the end of file was encountered and you can proceed accordingly. For example, the program below reads lines from a file and prints them to the screen. The first version prints the last line twice, while the second version behaves correctly.
 
-\begin{verbatim}
-// bad_read.cpp
-#include <fstream>
-#include <iostream>
-#include <string>
+\input{code/06-bad-read}
 
-int main(int argc, char** argv)
-{
-  // Check for correct arguments
-  if ( argc != 2 )
-  {
-    std::cerr << "Usage: " << argv[0] << " filename\n";
-    return 1;
-  }
-
-  // Open the file and test for failure
-  std::ifstream in(argv[1]);
-  if ( ! in.is_open() )
-  {
-    std::cerr << "Could not open file: " << argv[1] << "\n";
-    return 1;
-  }
-
-  // Read lines into a string and print them
-  std::string line;
-  while ( ! in.eof() )
-  {
-    std::getline(in, line);
-    std::cout << line << "\n";
-  }
-  in.close();
-  
-  return 0;
-}
-\end{verbatim}
-
-\begin{verbatim}
-// good_read.cpp
-#include <fstream>
-#include <iostream>
-#include <string>
-
-int main(int argc, char** argv)
-{
-  // Check for correct arguments
-  if ( argc != 2 )
-  {
-    std::cerr << "Usage: " << argv[0] << " filename\n";
-    return 1;
-  }
-
-  // Open the file and test for failure
-  std::ifstream in(argv[1]);
-  if ( ! in.is_open() )
-  {
-    std::cerr << "Could not open file: " << argv[1] << "\n";
-    return 1;
-  }
-
-  // Read lines into a string and print them
-  std::string line;
-  while ( true )
-  {
-    std::getline(in, line);
-    if ( in.eof() )
-      break;
-    std::cout << line << "\n";
-  }
-  in.close();
-
-  return 0;
-}
-\end{verbatim}
+\input{code/07-good-read}
 
 In this case, the most likely result is that an empty final line is printed by the first version, which would not appear in the original file. The second version will just output the text as per the original file.
 
 \subsection{String streams}
 String streams provide streaming operations for strings; in other words, they do exactly what they say they do! To see why this is useful, consider the case where you have some command-line argument you want to use as an integer. One way to convert from a \verb|const char*| to an \verb|int| is to use the \verb|atoi()| function. Arguably a better, more C++ way, is to use string streams. You'll need the \verb|<sstream>| header.
-\begin{verbatim}
-#include <sstream>
-
-int main(int argc, char** argv)
-{
-  std::string argument(argv[1]);
-  std::istringstream in(argument);
-  int nEvents;
-  in >> nEvents;
-  for(int i = 0; i < nEvents; ++i)
-    // ...
-}
-\end{verbatim}
+\input{code/08-istringstream}
 
 Here, we construct an \verb|istringstream| from a \verb|std::string| object, then use the resulting stream to read into an integer. Equivalently, if we want a string containing the current event number:
 
-\begin{verbatim}
-for(int i = 0; i < nEvents; ++i)
-{
-  std::ostringstream out;
-  out << "Event " << i << "\n";
-  std::string eventTitle = out.str();
-  // do something with the string
-}
-\end{verbatim}
+\input{code/09-ostringstream}
 
-Here, we use an \verb|ostringstream| to make an output stream which builds a string. The \verb|str()| method of an \verb|ostringstream| returns a \verb|std::string| object representing everything that has been streamed into it.
+Here, we use an \verb|ostringstream| to make an output stream which builds a string. The \verb|str()| member function of an \verb|ostringstream| returns a \verb|std::string| object representing everything that has been streamed into it.
 
 String streams are useful for conversions like those above, but my preferred method is to use the \emph{Boost} library, which is not a part of the C++ Standard. If Boost is installed, you can use \verb|boost::lexical_cast<>()| as a short-hand way of writing the first case:
-\begin{verbatim}
-#include <boost/lexical_cast.hpp>
-
-int main(int argc, char** argv)
-{
-  int nEvents = boost::lexical_cast<int>(argv[1]);
-  for(int i = 0; i < nEvents; ++i)
-    // ...
-}
-\end{verbatim}
+\input {code/10-boost-lexical-cast}
 
 \verb|boost::lexical_cast<>()| is a function template which converts from the argument type to the template parameter type. See section \ref{sec:templates} for more on templates. The nice thing about \verb|boost::lexical_cast<>()| is that it makes the intention clear---you state that you want to convert from a string to an integer---even though it (often) uses string streams behind the scenes!
 
 \section{Compiling, linking \& distributing code}\label{sec:compiling}
 \subsection{Distributing code}
-Most software in the UNIX world is distributed in source format. This is because source compatibility across many machines and architectures is much easier than binary compatibility. You should distribute your code as a set of source files \emph{including all headers and library source} (unless the library is distributed separately), as well as some kind of build system. A \verb|Makefile| will suffice for simple projects, but for more advanced software you may want to look into some of the more flexible build systems, such as \emph{GNU Autotools}\cite{Autobook} and \emph{cmake}.\footnote{\url{http://www.cmake.org/}}
+Most software in the UNIX world is distributed in source format. This is because achieving (and maintaining) source compatibility across many machines and architectures is much easier than binary compatibility. You should distribute your code as a set of source files \emph{including all headers and library source} (unless the library is distributed separately), as well as some kind of build system. A \verb|Makefile| will suffice for simple projects, but for more advanced software you may want to look into some of the more flexible build systems, such as \emph{GNU Autotools}\cite{Autobook} and \emph{cmake}.\footnote{\url{http://www.cmake.org/}}
 
 Remember to distribute your complete source, and not to include binaries which, having been compiled on one system, are not likely to work elsewhere.
 
@@ -251,17 +139,14 @@ Dynamic linking is preferable to static since it allows multiple programs to sha
 
 \section{The \texttt{std::string} class}\label{sec:string}
 The \texttt{std::string} class provides improved support for text strings over the C string (\texttt{char*}). It is actually a \emph{typedef} (see section \ref{sec:typedefs} for a discussion of \emph{typedef}) of a templated class (see section \ref{sec:templates} for a discussion of templates):
-\begin{verbatim}
-typedef basic_string<char> string;
-\end{verbatim}
+\input{code/11-string-typedef}
 
 So, when you're looking for documentation on the \texttt{std::string}, you'll have to look up the class \texttt{basic\_string}. I'll spend a little time here discussing some of the features of the \texttt{std::string} which make it infinitely superior to the C string. From now on I'll use the phrases \texttt{std::string} and \texttt{string} interchangeably. Don't forget that \texttt{string} is in the \texttt{std} namespace!
 
 \subsection{Constructing \texttt{std::string} objects}
 The \texttt{std::string} class provides a number of constructors. The default constructor is
-\begin{verbatim}
-explicit basic_string(const Allocator& a = Allocator());
-\end{verbatim}
+\input{code/12-string-ctor}
+
 There are two interesting points to note here; firstly default constructors can take \emph{optional} arguments! A function argument is optional if a default value is provided, as was done here. Don't worry about what the allocator stuff means, it's not important right now. A default constructor is something which can be called without passing any arguments to it. By providing a default value for the allocator argument \texttt{a}, this constructor will work as a default constructor.
 
 The second thing to note is the keyword \texttt{explicit} in front of the constructor. Because this constructor takes a single argument, it could in principle be used for \emph{type conversion}. That is, if we have an object of type \texttt{Allocator}, and something expects it to be a \texttt{basic\_string}, this constructor would ordinarily provide a type conversion from \texttt{Allocator} to \texttt{basic\_string}. In general, this is a \emph{very bad thing} and should be avoided. The \texttt{explicit} keyword tells the compiler that this constructor must not be called implicitly, e.g. for type conversions, and can only be called when explicitly requested; i.e. when the user constructs an \texttt{std::string} object. It is a good idea to make all single-argument constructors \texttt{explicit} so as to avoid defining unwanted type conversions.
@@ -269,61 +154,35 @@ The second thing to note is the keyword \texttt{explicit} in front of the constr
 The string class provides the expected copy constructor (and the copy assignment operator). I won't discuss these further.
 
 There are also some more interesting constructors. The one below constructs a string from another string object, taking the sub-string beginning at position \texttt{pos}, up to a maximum of \texttt{n} characters (where \texttt{n} takes the default value \texttt{npos}, which is a special value defined in the string class meaning ``the end of the string''):
-\begin{verbatim}
-basic_string(const basic_string& str, size_type pos,
-  size_type n = npos, const Allocator& a = Allocator());
-\end{verbatim}
+\input{code/13-string-ctor-from-another-string}
+
 This constructor lets you quickly make one string which contains a substring of another.
 
 There are two constructors which take \texttt{char*} arguments, allowing you to make a string from a C string:
-\begin{verbatim}
-basic_string(const char* s, size_type n,
-  const Allocator& a = Allocator());
+\input{code/14-string-ctors-from-cstring}
 
-basic_string(const char* s,
-  const Allocator& a = Allocator());
-\end{verbatim}
 The first makes a string from the first \texttt{n} characters of \texttt{s}, while the second makes a string from all the characters in \texttt{s} up to but not including a \texttt{traits::eos()} character. \texttt{traits::eos()} usually means a null character, \texttt{`\textbackslash 0'}. The reason for the traits class is to allow the behaviour of the string class to be altered by changing the traits class. This is a concept known as \emph{policy-based design} and will not be covered in detail here.
 
 Another constructor allows us to make a string containing \texttt{n} copies of a character \texttt{c}:
-\begin{verbatim}
-basic_string(size_type n, char c,
-  const Allocator& a = Allocator());
-\end{verbatim}
+\input{code/15-string-ctor-repeated-char}
 
 Finally, there exists a constructor for the \texttt{std::string} which takes a pair of iterators as arguments. This allows strings to be constructed from any iterable sequence (including streams!) whose element type is \texttt{char}:
-\begin{verbatim}
-template<class InputIterator>
-basic_string(InputIterator start,
-  InputIterator end,
-  const Allocator& a = Allocator());
-\end{verbatim}
+\input{code/16-string-ctor-from-iter-pair}
+
 This allows us, for example, to construct a string from characters on an input stream by doing something like:
-\begin{verbatim}
-std::string bob(std::istream_iterator<char>(std::cin),
-  std::istream_iterator<char>());
-\end{verbatim}
-Don't worry too much about \texttt{istream\_iterator} for now. You'll find a lot of information about stream iterators in a good book on the standard library (e.g.\cite{StandardLibrary}).
+\input{code/17-string-from-input-stream}
+
+Don't worry too much about \texttt{istream\_iterator} for now. You'll find a lot of information about stream iterators in a good book on the standard library (e.g.\cite{StandardLibrary}). One thing worth noting is the extra set of brackets around the first argument to the string constructor. These are necessary because the whole statement would otherwise be parsed as a function declaration.\footnote{This behaviour is known in the C++ community as the \emph{Most Vexing Parse}. The standard requires that such expressions are parsed as function declarations, and not as initialisations. C++11 uniform initialisation solves this problem (and others). See \url{http://en.wikipedia.org/wiki/Most_vexing_parse} for more details.}
 \subsection{Operators}
 The string class provides the expected copy assignment operator, as well as assignment operators allowing one to assign a \texttt{char*} or a \texttt{char} to a string object:
-\begin{verbatim}
-basic_string& operator=(const basic_string& str);
-basic_string& operator=(const char* s);
-basic_string& operator=(char c);
-\end{verbatim}
+\input{code/18-string-assignment-operators}
 
 There are also two versions of the subscript operator, allowing you to access characters in the string as though they were elements in an array. The first is called when you're working with a \emph{const} string, the second in all other cases:
-\begin{verbatim}
-const char& operator[](size_type pos) const;
-char& operator[](size_type pos);
-\end{verbatim}
+\input{code/19-string-subscript}
 
 Finally, there are three ``addition with assignment'' operators:
-\begin{verbatim}
-basic_string& operator+=(const basic_string& s);
-basic_string& operator+=(const char* s);
-basic_string& operator+=(char c);
-\end{verbatim}
+\input{code/20-string-addition-assignment}
+
 These allow us to append text to an existing string, either by adding another string, a C string, or a single character.
 
 \subsection{Iterators}
@@ -334,33 +193,19 @@ The string class has quite a few member functions, so I'm going to discuss only 
 
 \subsubsection{\texttt{erase()}}
 Three forms of \texttt{erase()} are provided:
-\begin{verbatim}
-basic_string& erase(size_type pos = 0, size_type n = npos);
-iterator erase(iterator p);
-iterator erase(iterator start, iterator finish);
-\end{verbatim}
+\input{code/21-string-erase}
+
 The first can be called with no arguments (allowing the default values to be used) to clear a string completely. It removes at most \texttt{n} characters from the string, starting at position \texttt{pos}.
 
 The second erases the single element pointed to by the iterator \texttt{p}, while the third removes elements in the range \texttt{[start, finish)} i.e. from \texttt{start} (inclusive) up to but not including \texttt{finish}.
 
 \subsubsection{The \texttt{find()} family of functions}
 There are a number of member functions for finding things in the string. The first set look for one string in another, with the search string specified in a number of ways (another \texttt{std::string}, a C string or a single character):
-\begin{verbatim}
-size_type find(const std::string& str, size_type pos = 0) const;
-size_type find(const char* s, size_type pos, size_type n) const;
-size_type find(const char* s, size_type pos = 0) const;
-size_type find(char c, size_type pos = 0) const;
-\end{verbatim}
+\input{code/22-string-find}
 
 There are also several functions for finding the positions of characters within a string, having names of the form \texttt{find\_first\_of()}, \texttt{find\_last\_of()}, \texttt{find\_first\_not\_of()} and \texttt{find\_last\_not\_of()}. These look for the first or last character which matches or doesn't match one of the characters in the search string. Again, they take \texttt{std::string}, \texttt{char*} or \texttt{char} arguments. These can be used to find, for example, the first non-whitespace element in a string. The code below takes a string which may have whitespace to the left and right, and returns a string which has no whitespace surrounding it.
-\begin{verbatim}
-std::string trim(const std::string& str)
-{
-  std::string::size_type p = str.find_first_not_of(" \t\r\n");
-  std::string::size_type q = str.find_last_not_of(" \t\r\n");
-  return str.substr(p, q - p + 1);
-}
-\end{verbatim}
+\input{code/23-string-trim}
+
 I've also used the \texttt{substr()} function to extract a substring, which I'll describe in more detail later.
 
 In addition, there is an \texttt{rfind()} function, which does the same as \texttt{find()} but from the end of the string.
@@ -370,9 +215,8 @@ The \texttt{length()} and \texttt{size()} member functions both return the numbe
 
 \subsubsection{Substrings}
 The \texttt{substr()} function returns a string object constructed from a portion of the original string.
-\begin{verbatim}
-basic_string substr(size_type pos = 0, size_type n = npos) const;
-\end{verbatim}
+\input{code/24-string-substr}
+
 The new string contains \texttt{n} characters from the original, starting at \texttt{pos} (or from \texttt{pos} to the end of the string, if \texttt{n} is more than the number of characters remaining between \texttt{pos} and the end).
 
 \subsubsection{\texttt{c\_str()} and \texttt{data()}}
@@ -380,23 +224,18 @@ The member function \texttt{c\_str()} returns a pointer to a null-terminated cha
 
 The \texttt{data()} function returns a pointer to the array of characters used internally by the string. This will not be null-terminated (since the string keeps track of its length in another member variable, and in principle a string object can hold text containing `\textbackslash 0' characters).
 
-\subsection{Nonmember operators}
+\subsection{Non-member operators}
 A selection of free (non-member) operators exist for dealing with string objects. For example, one can add two strings together, so \texttt{operator+} is defined. Interesting ones include \texttt{operator==} and \texttt{operator!=} for string comparison, as well as \texttt{operator<}, which allows string objects to be used as the key type in a \texttt{std::map} container (more on this in the discussion of maps in section \ref{sec:containers_associative}).
 
 Finally, the streaming operators \verb|operator<<| and \verb|operator>>| are defined so that strings can be printed and read into in the same way as the built-in types (\texttt{int}, \texttt{float}, etc.)
 
 \subsection{\texttt{getline()}}
 There is a final free function associated with the string class. This provides \emph{unformatted input} from an \texttt{std::istream} to a \texttt{std::string}:
-\begin{verbatim}
-std::istream& getline(std::istream& is, std::string& str);
-std::istream& getline(std::istream& is, std::string& str, char delim)
-\end{verbatim}
-It lets you read a line from a file into a string, for example:
-\begin{verbatim}
-std::string myline;
-std::ifstream file("myfile.txt");
-std::getline(file, myline);
-\end{verbatim}
+\input{code/25-getline}
+
+It lets you read a line from a file (or other input stream) into a string, for example:
+\input{code/26-getline-example}
+
 The second form allows you to specify the delimiter at which it stops reading; this is useful for reading fields separated by tabs, colons, etc. into separate strings.
 
 \section{Typedefs}\label{sec:typedefs}
@@ -478,7 +317,7 @@ countryCodes["US"] = 1;
 std::cout << countryCodes["UK"] << std::endl;
 \end{verbatim}
 
-Note that the \verb|std::map| does not provide \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| method, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
+Note that the \verb|std::map| does not provide \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| member function, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
 
 \begin{verbatim}
 typedef std::map<std::string, int> CodeMap;
@@ -622,7 +461,7 @@ std::cout << *iter << "\n";
 // Output: 2
 \end{verbatim}
 
-As the code segment above demonstrated, standard library containers provide methods which return iterators for their elements. Containers usually provide \verb|begin()|, which returns a forward iterator to the first element, \verb|end()|, which returns a forward iterator to the ``one-past-the-end'' element, \verb|rbegin()|, which provides a reverse iterator to the last element, and \verb|rend()|, which provides a reverse iterator to the ``one-before-the-beginning'' element! In this way, to iterate over every element in a sequence, one covers the half-open range \verb|[begin(), end())|, i.e. including the first element, and not including the ``one-past-the-end'' element. A loop over each element would look something like this (assuming the same \verb|naturals| vector as in the code sample above):
+As the code segment above demonstrated, standard library containers provide member functions which return iterators for their elements. Containers usually provide \verb|begin()|, which returns a forward iterator to the first element, \verb|end()|, which returns a forward iterator to the ``one-past-the-end'' element, \verb|rbegin()|, which provides a reverse iterator to the last element, and \verb|rend()|, which provides a reverse iterator to the ``one-before-the-beginning'' element! In this way, to iterate over every element in a sequence, one covers the half-open range \verb|[begin(), end())|, i.e. including the first element, and not including the ``one-past-the-end'' element. A loop over each element would look something like this (assuming the same \verb|naturals| vector as in the code sample above):
 \begin{verbatim}
 std::vector<int>::iterator iter;
 std::vector<int>::iterator end = naturals.end();
@@ -949,7 +788,7 @@ T& operator,(T& v, typename T::value_type element)
 
 What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these function templates and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
 
-This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| method; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on function templates, template classes, and \emph{template metaprogramming}!
+This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| member function; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on function templates, template classes, and \emph{template metaprogramming}!
 
 \subsection{Dependent types and the \texttt{typename} keyword}
 You've already seen \verb|typename| used in template parameter lists, but there is another use for it, and it was demonstrated in the operator examples of the previous section:
@@ -1005,7 +844,7 @@ Particle information is a constant dataset which needs to be held by the program
 The Singleton pattern applies when there must be exactly one instance of a class, and it must be (globally) accessible to clients from a well-known access point.
 
 \subsection{Implementation}
-The Singleton pattern ensures that only one unique instance of the class exists, and that it is a normal instance of the class. It does this by writing the class in such a way as to guarantee that only one instance can ever exist; usually this is done by hiding the operations that create instances (constructors, copy assignment) and using a class method (static member function) to access this instance, creating it if required (thus ensuring that it is intialised before first use). Here is the class declaration:
+The Singleton pattern ensures that only one unique instance of the class exists, and that it is a normal instance of the class. It does this by writing the class in such a way as to guarantee that only one instance can ever exist; usually this is done by hiding the operations that create instances (constructors, copy assignment) and using a class (static) member function to access this instance, creating it if required (thus ensuring that it is intialised before first use). Here is the class declaration:
 
 \begin{verbatim}
 class ParticleInfo {
@@ -1034,9 +873,9 @@ class ParticleInfo {
 };
 \end{verbatim}
 
-We must now implement the constructor and the \verb|ParticleInfo::Instance()| static method. Note that the copy constructor and copy assignment operator are declared private but \emph{should never be defined}; this protects against the member functions themselves trying to make copies!
+We must now implement the constructor and the \verb|ParticleInfo::Instance()| static member function. Note that the copy constructor and copy assignment operator are declared private but \emph{should never be defined}; this protects against the member functions themselves trying to make copies!
 
-The constructor is implemented as usual, and sets the ordinary member variables, filling the maps with the required information. The only thing that is different is the \verb|Instance()| static method:
+The constructor is implemented as usual, and sets the ordinary member variables, filling the maps with the required information. The only thing that is different is the \verb|Instance()| static member function:
 
 \begin{verbatim}
 // allocate and initialise the static member pointer
@@ -1052,7 +891,7 @@ const ParticleInfo* ParticleInfo::Instance()
 }
 \end{verbatim}
 
-Clients access the singleton through the \verb|Instance()| method. The pointer to the actual instance is initialised to zero, and the static member function returns its value, creating the object if it is zero. This is \emph{lazy initialisation}; the instance is not created and stored until it is first needed!
+Clients access the singleton through the \verb|Instance()| member function. The pointer to the actual instance is initialised to zero, and the static member function returns its value, creating the object if it is zero. This is \emph{lazy initialisation}; the instance is not created and stored until it is first needed!
 
 For more on the Singleton design pattern, see\cite{DesignPatterns} (which also includes information about many other design patterns!)
 
