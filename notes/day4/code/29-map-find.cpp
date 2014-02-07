@@ -15,7 +15,7 @@ typedef std::map<std::string, int> CodeMap;
 
 int getCountryCode(const CodeMap& map, const std::string& country)
 {
-    CodeMap::iterator i = map.find(country§);
+    CodeMap::const_iterator i = map.find(country);
     if (i != map.end())
         return i->second;
     else return 0;
@@ -27,6 +27,6 @@ int main()
     CodeMap countryCodes;
     countryCodes["UK"] = 44;
     countryCodes["US"] = 1;
-    std::cout << getCountryCode("UK");
+    std::cout << getCountryCode(countryCodes, "UK");
     return 0;
 }
