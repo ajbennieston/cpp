@@ -240,11 +240,7 @@ The second form allows you to specify the delimiter at which it stops reading; t
 
 \section{Typedefs}\label{sec:typedefs}
 A \verb|typedef| provides an \emph{alias} for a typename. Consider the example below:
-
-\begin{verbatim}
-typedef std::string str;
-str a = "Hello";
-\end{verbatim}
+\input{code/27-typedef}
 
 It is important to note that a typedef \emph{does not} introduce a new type; it just provides another name for an existing type. Given the above typedef, you could pass \verb|str| objects to a function which expects a \verb|std::string| (and vice versa). Typedefs provide a method for shortening long typenames (which can often result from the use of templates (section \ref{sec:templates}) or standard library containers (section \ref{sec:containers}). They also, in the case of containers, allow you to express the types held or used by the container in a consistent manner (for example \verb|std::vector<T>::size_type| which is a typedef to an integer type whose range is big enough to hold the maximum possible size of a vector of \verb|T| (\verb|T| is an arbitrary type) and \verb|std::vector<T>::value_type| which is a typedef to the type \verb|T| itself.
 
@@ -310,25 +306,11 @@ A \verb|std::set<T>| is a container in which elements are sorted according to th
 Map elements are key/value pairs; that is, the class is \verb|std::map<T1, T2>| where \verb|T1| is the key type and \verb|T2| is the value type. The elements are stored in the container sorted by the key (rather, by the value of the key, which is distinct from the value of the value... confusing, huh?) and each key can occur only once in any given map.
 
 Maps can be used as associative arrays, where one can look up the value associated with a given key:
-\begin{verbatim}
-std::map<std::string, int> countryCodes;
-countryCodes["UK"] = 44;
-countryCodes["US"] = 1;
-std::cout << countryCodes["UK"] << std::endl;
-\end{verbatim}
+\input{code/28-map-associative}
 
 Note that the \verb|std::map| does not provide \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| member function, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
 
-\begin{verbatim}
-typedef std::map<std::string, int> CodeMap;
-std::string getCountryByCode(const CodeMap& map, const int code)
-{
-  CodeMap::iterator i = map.find(code);
-  if ( i != map.end() )
-    return i->second;
-  else return "";
-}
-\end{verbatim}
+\input{code/29-map-find}
 
 \subsubsection{Multisets and multimaps}\label{sec:containers_associative_multi}
 As for sets and maps, but now duplicate elements are allowed.
