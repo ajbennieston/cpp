@@ -349,56 +349,30 @@ It is always a good idea to reserve space in vectors before you append to them w
 Iterators, like pointers, are a level of indirection allowing one to \emph{iterate} (navigate) over elements in a container. Any given iterator represents a position in the container. Iterators come in several flavours; notably \emph{forward iterators}, \emph{reverse iterators}, \emph{bidirectional iterators} or \emph{random access iterators}. Forward iterators step forward through a sequence when incremented, while reverse iterators step backward through the sequence when incremented. Bidirectional iterators can be incremented (to step forward) or decremented (to step backward), and random access iterators can have integer values added or subtracted, allowing you to move back and forth through a container at will. Each of these operations moves the iterator to ``point to'' the corresponding sequence element; in this way, they behave just like pointers. Forward iterators are the most used, with reverse iterators having some utility also.
 
 In analogy with pointers, one must dereference an iterator to obtain the value of the element it represents:
-\begin{verbatim}
-std::vector<int> naturals;
-naturals.push_back(1);
-naturals.push_back(2);
-naturals.push_back(3);
-naturals.push_back(4);
-std::vector<int>::iterator iter = naturals.begin();
-++iter;
-std::cout << *iter << "\n";
-// Output: 2
-\end{verbatim}
+
+\input{code/35-iterator-first-example}
 
 As the code segment above demonstrated, standard library containers provide member functions which return iterators for their elements. Containers usually provide \verb|begin()|, which returns a forward iterator to the first element, \verb|end()|, which returns a forward iterator to the ``one-past-the-end'' element, \verb|rbegin()|, which provides a reverse iterator to the last element, and \verb|rend()|, which provides a reverse iterator to the ``one-before-the-beginning'' element! In this way, to iterate over every element in a sequence, one covers the half-open range \verb|[begin(), end())|, i.e. including the first element, and not including the ``one-past-the-end'' element. A loop over each element would look something like this (assuming the same \verb|naturals| vector as in the code sample above):
-\begin{verbatim}
-std::vector<int>::iterator iter;
-std::vector<int>::iterator end = naturals.end();
-for(iter = naturals.begin(); iter != end; ++iter)
-{
-  // loop body; here just output each element
-  std::cout << *iter << "\n";
-}
-\end{verbatim}
+
+\input{code/36-iterator-for-loop}
 
 Note that I initialise the \verb|end| iterator outside of the loop, instead of having the loop written as:
-\begin{verbatim}
-for(iter = naturals.begin(); iter != naturals.end(); ++iter)
-\end{verbatim}
+
+\input{code/37-iterator-init-in-loop}
 
 This is to avoid a call to \verb|std::vector<int>::end()| every time through the loop! I also declare the iterator \verb|iter| outside the loop, otherwise the code would look something like:
-\begin{verbatim}
-for(std::vector<int>::iterator iter = naturals.begin();
-    iter != naturals.end(); ++iter)
-\end{verbatim}
+
+\input{code/38-longer-loop-init}
 
 Long code lines should be avoided for aesthetic reasons, wherever possible! A typedef might also help here, but can sometimes serve to obscure the details of what is being iterated over, which is not so helpful. Note that you can also do something like:
 
-\begin{verbatim}
-for(std::vector<int>::iterator
-    iter = naturals.begin(),
-    end = naturals.end();
-    iter != end;
-    ++iter)
-\end{verbatim}
+\input{code/39-init-end-iterator-too}
 
-Where I make use of the comma operator to initialise two iterators in the first section of the for loop. Note that you can only rely on the value of \verb|end()| being stored if your loop doesn't \emph{modify} the vector; if you add or remove elements, you invalidate the iterators and you'll have to test against the result of \verb|end()| each time through!
-
+Here, I make use of the comma operator to initialise two iterators in the first section of the for loop. Note that you can only rely on the value of \verb|end()| being stored if your loop doesn't \emph{modify} the vector; if you add or remove elements, you invalidate the iterators and you'll have to test against the result of \verb|end()| each time through!
 
 Finally, you will notice that I use the \verb|++iter| prefix increment, rather than \verb|iter++| postfix form. While an iterator for the \verb|std::vector| class is (probably) just a pointer, some iterators may be objects of a complex class which may require significant memory or CPU time to construct. If we can avoid making a temporary object by using the prefix form, we should always do so!
 
-You may be wondering why iterators are more useful than pointers. The idea is that, while pointers can be used as iterators, objects of any class that behaves like a pointer can be used too. This allows one to navigate over containers with complex structure, such as lists (where elements need not be contiguous in memory) or maps (which are usually implemented as trees).
+You may be wondering why iterators are more useful than pointers. The idea is that, while pointers can be used as iterators, objects of any class that behaves like a pointer can be used too. This allows one to navigate over containers with complex structure, such as lists (where elements need not be contiguous in memory) or maps (which are usually implemented as trees), by overloading the increment and decrement operators to do the right thing to find the next element in the sequence.
 
 \subsection{\texttt{const\_iterator}s}
 If you're iterating over a const container, you'll only be able to get \verb|const_iterator| objects. In fact, you can always use these if you don't want to be able to change the elements over which you're iterating (e.g. for output operations):
