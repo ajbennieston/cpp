@@ -1,9 +1,8 @@
 .PHONY: all clean
 
-SUBDIRS=notes
 
 all:
-	$(foreach subdir,$(SUBDIRS),$(MAKE) -C $(subdir))
+	$(MAKE) -C notes
 
 clean:
-	$(foreach subdir,$(SUBDIRS),$(MAKE) -C $(subdir) clean)
+	$(MAKE) -C notes clean

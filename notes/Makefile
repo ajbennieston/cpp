@@ -1,18 +1,13 @@
+SUBDIRS=day1 day2 day3 day4 day5
+
 .PHONY: all clean
 
 all:
-	$(MAKE) -C day1
-	$(MAKE) -C day2
-	$(MAKE) -C day3
-	$(MAKE) -C day4
-	$(MAKE) -C day5
+	for subdir in $(SUBDIRS) ; do \
+		$(MAKE) -C $$subdir ; \
+		done
 
 clean:
-	$(MAKE) -C day1 clean
-	$(MAKE) -C day2 clean
-	$(MAKE) -C day3 clean
-	$(MAKE) -C day4 clean
-	$(MAKE) -C day5 clean
-
-
-
+	for subdir in $(SUBDIRS) ; do \
+		$(MAKE) -C $$subdir clean ; \
+		done
