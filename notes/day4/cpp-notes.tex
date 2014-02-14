@@ -318,117 +318,35 @@ As for sets and maps, but now duplicate elements are allowed.
 \subsection{Nested typedefs}
 Standard library containers provide \emph{nested typedefs} (i.e. typedefs within the scope of the (template) class). These allow you to obtain types such as that used to store the size of the container, or the type of value which the container holds. You'll probably have seen the \verb|size_type| typedef already. In a standard library container, \verb|size_type| is a typedef to an integer type guaranteed to be big enough to represent the maximum possible size of the container. When you write a manual loop over a container, the index should use this type:
 
-\begin{verbatim}
-std::vector<int> myVec;
+\input{code/30-container-member-typedefs}
 
-// Not a loop over the vector
-// we're just pushing elements onto it
-for(int i = 0; i < 200; ++i)
-  myVec.push_back(i);
+Note, however, that this is a good candidate for using iterators. See section \ref{sec:iter} for more on iterators.
 
-// This is a loop over the vector
-// so we use its size_type
-std::vector<int>::size_type i = 0;
-std::vector<int>::size_type size = myVec.size();
-for(/*already initialised*/; i < size; ++i)
-{
-  std::cout << myVec.at(i) << std::endl;
-}
-\end{verbatim}
+The sequence containers have a \verb|value_type| typedef, which represents the type stored in the container, and the associative containers have \verb|key_type| and \verb|mapped_type| typedefs too:
 
-Note, however, that this is a good candidate for using iterators (which are also nested typedefs). See section \ref{sec:iter} for more on iterators.
-
-The sequence containers have a \verb|value_type| typedef, which represents the type stored in the container, and the associative containers have a \verb|key_type| typedef too:
-
-\begin{verbatim}
-typedef std::map<int, std::string> MyMapType;
-MyMapType someMap;
-someMap[1] = "one";
-someMap[2] = "two";
-
-// later...
-
-MyMapType::key_type first_key = (someMap.begin())->first;
-MyMapType::value_type first_value = (someMap.begin())->second;
-\end{verbatim}
+\input{code/31-container-value-type}
 
 \subsection{On the size and capacity of \texttt{std::vector}}
 In a typical use case for the \verb|std::vector<T>| container, you might create an empty vector, then push elements onto it using \verb|push_back()| using some kind of loop to generate values:
 
-\begin{verbatim}
-std::vector<int> myvec;
-myvec.push_back(1);
-myvec.push_back(3);
-myvec.push_back(5);
-myvec.push_back(7);
-myvec.push_back(9);
-\end{verbatim}
+\input{code/32-fill-vector-by-push-back}
 
 Appending an element to a vector is usually quite a ``cheap'' operation in terms of time taken, but in cases where you know you're going to be appending multiple elements, it's a good idea to reserve space for them before you start. This is possible because a \verb|std::vector<T>| actually contains a pointer to an array of \verb|T|, allocated dynamically. The vector knows its own size (the number of elements you've stored in it), but it also has a \emph{capacity}. The capacity is the number of elements it can store in the array it dynamically allocated.
 
-Vectors are somewhat smart in that, when you use \verb|push_back| to append an element, they reallocate their internal array and make sure it's big enough to hold the new element. They're typically even smarter than this, and will \emph{double} their previous capacity once you run out of space (i.e. once size $==$ capacity). Reallocations are expensive (in terms of time taken), so they should be avoided at all costs. To avoid reallocations, you can use the \verb|std::vector<T>::reserve()| member function to reserve memory before you start appending. The \verb|reserve()| member function changes a vector's capacity, but not its size (capacity is always $\ge$ size).
+Vectors are somewhat smart in that, when you use \verb|push_back| to append an element, they reallocate their internal array and make sure it's big enough to hold the new element. They're typically even smarter than this, and will \emph{double} their previous capacity once you run out of space (i.e. once \verb|size| $==$ \verb|capacity|). Reallocations are expensive (in terms of time taken), so they should be avoided at all costs. To avoid reallocations, you can use the \verb|std::vector<T>::reserve()| member function to reserve memory before you start appending. The \verb|reserve()| member function changes a vector's capacity, but not its size (\verb|capacity| is always $\ge$ \verb|size|).
 
 The code below is identical to the example above, but now contains comments to describe what (probably) happens behind the scenes:
 
-\begin{verbatim}
-std::vector<int> myvec;
-// a vector is created and no space is allocated
-// size = 0, capacity = 0
-
-myvec.push_back(1);
-// an array is dynamically allocated
-// and the value 1 inserted in its 0th element
-// size = 1, capacity = 1
-
-myvec.push_back(3);
-// the array is reallocated
-// and the value 3 inserted in its 1st element
-// size = 2, capacity = 2
-
-myvec.push_back(5);
-// the array is reallocated
-// and the value 5 inserted in its 2nd element
-// size = 3, capacity = 4
-
-myvec.push_back(7);
-// the value 7 is inserted into the 3rd element
-// of the array, which is already big enough
-// size = 4, capacity = 4
-
-myvec.push_back(9);
-// the array is reallocated
-// and the value 9 inserted into its 4th element
-// size = 5, capacity = 8
-\end{verbatim}
+\input{code/33-vector-size-capacity}
 
 As you can see, even in this simple example, we might trigger reallocation of the array on almost every append operation. The situation gets progressively better; once the capacity is 8 we can do a further three appends before we have to reallocate, and then we get a capacity of 16, so we can do even more (that said, the reallocations take longer and longer as more data has to be moved each time). On the other hand, if we only allocate 5 elements, we've wasted the remaining space by having a capacity of 8. By using \verb|reserve()| we can tell the vector in advance how much we want to store (or, at least, a reasonable guess):
 
-\begin{verbatim}
-std::vector<int> myvc;
-// empty vector created
-// size = 0, capacity = 0
-
-myvec.reserve(5);
-// array is allocated with 5 elements
-// size = 0, capacity = 5
-
-// now, no reallocations happen in the
-// push_back operations below
-myvec.push_back(1);
-myvec.push_back(3);
-myvec.push_back(5);
-myvec.push_back(7);
-myvec.push_back(9);
-
-// but once we're here, if we push_back
-// again, we'll trigger a reallocation
-// and most likely end up with capacity = 10
-\end{verbatim}
+\input{code/34-using-vector-reserve}
 
 It is always a good idea to reserve space in vectors before you append to them with \verb|push_back()| or similar. If you don't know exactly how many elements you want to append, make a reasonable guess and err on the side of caution by reserving a bit more space than you're likely to need!
 
 \section{Iterators}\label{sec:iter}
-Iterators, like pointers, are a level of indirection allowing one to \emph{iterate} (navigate) over elements in a container. Any given iterator represents a position in the container. Iterators come in several flavours; notably \emph{forward iterators}, \emph{reverse iterators}, \emph{bidirectional iterators} or \emph{random access iterators}. Forward iterators step forward through a sequence when incremented, while reverse iterators step backward through the sequence when incremented. Bidirectional iterators can be incremented (to step forward) or decremented (to step backward), and random access iterators can have integer values added or subtracted. Each of these operations moves the iterator to ``point to'' the corresponding sequence element; in this way, they behave just like pointers. Forward iterators are the most used, with reverse iterators having some utility also.
+Iterators, like pointers, are a level of indirection allowing one to \emph{iterate} (navigate) over elements in a container. Any given iterator represents a position in the container. Iterators come in several flavours; notably \emph{forward iterators}, \emph{reverse iterators}, \emph{bidirectional iterators} or \emph{random access iterators}. Forward iterators step forward through a sequence when incremented, while reverse iterators step backward through the sequence when incremented. Bidirectional iterators can be incremented (to step forward) or decremented (to step backward), and random access iterators can have integer values added or subtracted, allowing you to move back and forth through a container at will. Each of these operations moves the iterator to ``point to'' the corresponding sequence element; in this way, they behave just like pointers. Forward iterators are the most used, with reverse iterators having some utility also.
 
 In analogy with pointers, one must dereference an iterator to obtain the value of the element it represents:
 \begin{verbatim}
