@@ -516,10 +516,7 @@ The boost library is not part of the C++98 standard (though large parts of it ar
 
 Aside from the smart pointers (discussed in section \ref{sec:boost_smart_ptr}), one of the most useful parts of boost is the Boost.Conversion library, which provides (amongst other things) the \verb|boost::lexical_cast| function template.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/conversion/index.html}} These allow you to convert from one type to another (using string streams if required) provided the types have streaming operators. This greatly simplifies code such as converting a string to a number, since you can simply write:
 
-\begin{verbatim}
-std::string str = "0.707";
-double x = boost::lexical_cast<double>(str);
-\end{verbatim}
+\input{code/60-boost-lexical-cast}
 
 Not only does it handle the conversion, as well as checking for possible problems (range errors, etc.) but it is also very expressive. When somebody reads the code above, it is very clear that you're performing a lexical conversion, i.e. treating the string as the string representation of a number, and extracting that number. This leads towards self-documenting code, where the code itself clearly states what it is doing without the need for comments!
 
@@ -541,50 +538,13 @@ The Singleton pattern applies when there must be exactly one instance of a class
 \subsection{Implementation}
 The Singleton pattern ensures that only one unique instance of the class exists, and that it is a normal instance of the class. It does this by writing the class in such a way as to guarantee that only one instance can ever exist; usually this is done by hiding the operations that create instances (constructors, copy assignment) and using a class (static) member function to access this instance, creating it if required (thus ensuring that it is intialised before first use). Here is the class declaration:
 
-\begin{verbatim}
-class ParticleInfo {
-  public:
-    static const ParticleInfo* Instance();
-
-    // ordinary member functions:
-    int getPDGCode(const std::string& name) const;
-    std::string getName(const int id) const;
-    int getCharge(const int id) const;
-    double getMassMeV(const int id) const;
-    double getMassGeV(const int id) const;
-
-  private:
-    ParticleInfo();
-    ParticleInfo(const ParticleInfo&);
-    ~ParticleInfo() {}
-    ParticleInfo& operator=(const ParticleInfo&);
-    static ParticleInfo* theInstance;
-
-    // ordinary member variables:
-    std::map<std::string, int> name_to_id;
-    std::map<int, std::string> id_to_name;
-    std::map<int, int> id_to_charge;
-    std::map<int, double> id_to_mass;
-};
-\end{verbatim}
+\input{code/61-particleinfo-class-singleton}
 
 We must now implement the constructor and the \verb|ParticleInfo::Instance()| static member function. Note that the copy constructor and copy assignment operator are declared private but \emph{should never be defined}; this protects against the member functions themselves trying to make copies!
 
 The constructor is implemented as usual, and sets the ordinary member variables, filling the maps with the required information. The only thing that is different is the \verb|Instance()| static member function:
 
-\begin{verbatim}
-// allocate and initialise the static member pointer
-ParticleInfo* ParticleInfo::theInstance = 0;
-
-const ParticleInfo* ParticleInfo::Instance()
-{
-  if ( theInstance == 0 )
-  {
-    theInstance = new ParticleInfo;
-  }
-  return theInstance;
-}
-\end{verbatim}
+\input{code/62-particleinfo-instance-member-function}
 
 Clients access the singleton through the \verb|Instance()| member function. The pointer to the actual instance is initialised to zero, and the static member function returns its value, creating the object if it is zero. This is \emph{lazy initialisation}; the instance is not created and stored until it is first needed!
 
