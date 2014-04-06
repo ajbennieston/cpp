@@ -164,146 +164,41 @@ You can override non-virtual member functions too, but you probably shouldn't! T
 
 \subsection{Hiding of member functions}
 Consider the class hierarchy below. In \verb|Base| we define a function \verb|func| that takes an integer argument. In \verb|Derived|, we want to be able to deal with \verb|double| arguments too, so we try to write something like this:
-\begin{verbatim}
-class Base {
-  public:
-    void func(int x); // doesn't matter if this is virtual or not
-};
 
-class Derived : public Base {
-  public:
-    void func(double x);
-};
-\end{verbatim}
+\input{code/08-hiding}
 
-We might expect this to work; that is, our derived class should have the overloaded functions \texttt{void func(int x)} and {void func(double x)}. The compiler, however, has other ideas, and will typically warn you that ``Derived::func(double) hides Base::func(int)''.
+We might expect this to work; that is, our derived class should have the overloaded functions \texttt{void func(int x)} and \texttt{void func(std::string x)}. The compiler, however, has other ideas, and will typically warn you that ``\texttt{Derived::func(std::string)} hides \texttt{Base::func(int)}''.
 
 By defining a function named \verb|func| in the derived class, we hide any functions of the same name from the base class. In order to bring those into the scope of the derived class, we need a \emph{using declaration}:
-\begin{verbatim}
-class Base {
-  public:
-    void func(int x); // doesn't matter if this is virtual or not
-};
 
-class Derived : public Base {
-  public:
-    void func(double x);
-    using Base::func; // unhides Base::func(int x)
-};
-\end{verbatim}
+\input{code/09-using-base}
 
 Now, we have both overloads available in the class. You may have seen this happen when you tried to implement the virtual functions from the base class \verb|EventGenerator| if you gave the function in the derived class \verb|TwoBodyEventGenerator| a different signature (different number or type of arguments, or missed off the final \verb|const| qualifier). The important thing is that \emph{when you override a virtual function the signatures must match exactly}.
 
-Hiding occurs whenever you give a function in a derived class the same name as one in a base. You can add \emph{using declarations} to bring the names from the base class into the scope of the derived class. Note that hiding takes place when you have a (pointer to) derived object. If you have a base object (or a pointer to one) then nothing is hidden because the compiler cannot assume anything about the derived classes!\footnote{See \url{http://www.parashift.com/c++-faq-lite/strange-inheritance.html\#faq-23.9} for this example in more detail.}
+Hiding occurs whenever you give a function in a derived class the same name as one in a base. You can add \emph{using declarations} to bring the names from the base class into the scope of the derived class. Note that hiding takes place when you have a (pointer to a) derived object. If you have a base object (or a pointer to one) then nothing is hidden because the compiler cannot assume anything about the derived classes!\footnote{See \url{http://www.parashift.com/c++-faq-lite/strange-inheritance.html\#faq-23.9} for this example in more detail.}
 
 \section{Functions, function pointers \& function objects}
 \subsection{Functions \& function pointers}
 A function name acts like a pointer to that function. This is why things like the following example work.
-\begin{verbatim}
-double interval(const Particle& p)
-{
-  return p.getFourMomentum().interval();
-}
 
-// ...
-
-std::vector<Particle> mu_plus = fill_particle_vector("mu+");
-std::vector<double> inv_masses
-std::transform(mu_plus.begin(), mu_plus.end(),
-               std::back_inserter(inv_masses),
-               interval);
-\end{verbatim}
+\input{code/10-function-pointer}
 
 The \verb|std::transform()| algorithm expects its final argument to be some \emph{callable} entity. A function name suffices here because it acts like a pointer to that function, which \verb|std::transform()| can ultimately call, once for each element in the range.
 
 \subsubsection{Pointers to functions}
 Like (almost) every other entity in C++, a function pointer has a well-defined type. The type of a function pointer looks a little strange, but the general form is as follows:
-\begin{verbatim}
-return_type (*)(argument_typelist)
-\end{verbatim}
+
+\input{code/11-function-ptr-syntax}
 
 If you want to declare an object which is a function pointer, you must give the type as well as the name. What is slightly unusual is that the name goes after the \verb|*|. In the following example, we declare a few functions, as well as named function pointers which we initialise to point to those functions.
 
-\begin{verbatim}
-void printHelp(); 
-void (*ptr_to_help_function)() = &printHelp;
-
-double calculateInvariantMass(const Particle& a,
-    const Particle& b);
-double (*ptr_to_invmass_calc)(const Particle&,
-    const Particle&) = &calculateInvariantMass;
-
-void swapWithTmp(int& a, int& b);
-void swapWithXor(int& a, int& b);
-void (*my_swap_choice)(int&, int&) = &swapWithTmp;
-// ...
-// later:
-my_swap_choice = &swapWithXor;
-\end{verbatim}
+\input{code/12-function-pointer-examples}
 
 Because we're initialising a pointer, we use the address-of (\verb|&|) operator before the original function name, on the right-hand side of the \verb|=| operator. On most compilers, you can get away without using the address-of operator, and just write the function name directly. Strictly speaking, we should have used the address-of operator in the \texttt{std::transform} example earlier, too!
 
 You may wonder why we'd ever bother with creating a pointer to a function when we can just call the function directly. The reason is that it allows us to choose, at runtime, which particular function gets called. You'll notice this sounds a bit like virtual dispatch in class hierarchies; that's because it is (see section \ref{sec:vdispatch} for details on how virtual functions are usually implemented). We can use a function pointer to choose, at runtime, one of several functions to run, based on the value of some user input. For example, we could implement some of the calculator program from the first day in this manner:
 
-\begin{verbatim}
-#include <cstdlib>
-#include <iostream>
-
-double add(double a, double b) { return a + b; }
-double sub(double a, double b) { return a - b; }
-double mul(double a, double b) { return a * b; }
-double div(double a, double b) { return a / b; }
-
-int main()
-{
-  // variables to hold input from user
-  char op('\0');
-  double a(0.0), b(0.0);
-  // function pointer to choose current
-  // operation (init. to null ptr)
-  double (*current_operation)(double, double) = 0;
-
-  while ( true )
-  {
-    std::cout << "Enter two numbers: ";
-    std::cin >> a >> b;
-    std::cout << "Enter operation: [+-*/q]";
-    std::cin >> op;
-    switch( op )
-    {
-      case '+':
-        current_operation = &add;
-        break;
-      case '-':
-        current_operation = &sub;
-        break;
-      case '*':
-        current_operation = &mul;
-        break;
-      case '/':
-        current_operation = &div;
-        break;
-      case 'q':
-        // quit program
-        exit(0);
-      default:
-        // No sensible choice
-        // reset to null pointer
-        current_operation = 0;
-        break;
-    }
-
-    // call function pointed to
-    // if pointer is non-null
-    if ( current_operation )
-    {
-      std::cout << "Answer: "
-        << current_operation(a, b) << "\n";
-    }
-  }
-  return 0;
-}
-\end{verbatim}
+\input{code/13-calculator-func-ptr}
 
 I've omitted various forms of error checking (such as testing for sensible user input, or division by zero) for the sake of clarity. What we do here is read two numbers, then decide based on user input which function to call by setting a function pointer to the address of the relevant function. The advantage we gain is that we can then call the function later, at our convenience. In this trivial example we don't really care where we called the function, but hopefully it should be obvious that this ability to make a decision about which function to call, but delay the actual calling, comes in useful.
 
@@ -316,127 +211,36 @@ Note that you can also store function pointers as the \emph{value type} in a \te
 The discussion in the previous section applies equally to C and C++. Functions, and function pointers, behave in the same way for both languages. C++, however, introduces classes, and with them, member functions. If you can have a member function, you should be able to have a pointer to a member function---and, indeed, you can!
 
 If you thought the syntax for declaring a function pointer was strange, the syntax for working with pointers to member functions is stranger still. Actually, the type is fairly straightforward. If a pointer to an ordinary function looked something like:
-\begin{verbatim}
-return_type (*ptr_name)(argument_typelist);
-\end{verbatim}
-then a pointer to a member function of class Foo looks like:
-\begin{verbatim}
-return_type (Foo::*ptr_name)(argument_typelist);
-\end{verbatim}
+
+\input{code/14-named-func-ptr}
+
+then a pointer to a member function of class \verb|Foo| looks like:
+
+\input{code/15-named-member-func-ptr}
+
 There's an additional caveat here; you can also have pointers to \emph{const member functions}:
-\begin{verbatim}
-return_type (Foo::*ptr_name)(argument_typelist) const;
-\end{verbatim}
+
+\input{code/16-const-member-func-ptr}
 
 So far, so good. Nothing looks particularly different yet! We had to give the class name, and use the scope resolution operator (and this has to be done before the \verb|*| symbol), but things look pretty much as they did for ordinary function pointers.
 
 The problem is that when you call a member function, you have to have an object associated with it! You can't call a class member function without an object for it to act on. The mechanism for specifying the object uses perhaps the most unusual operator you'll ever encounter in C++, namely \verb|.*| and \verb|->*|
 
 The code sample below shows how this works for a class with two member functions having the same signature, using function pointers to call both member functions on objects and pointers to objects!
-\begin{verbatim}
-#include <cmath>
-#include <iostream>
 
-class Vector
-{
-  public:
-    Vector(double p1x, double p1y, double p2x, double p2y)
-      : x1(p1x), y1(p1y), x2(p2x), y2(p2y) {}
-
-    double euclideanLength() const
-    {
-      // normal vector length
-      return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-    }
-
-    double manhattanLength() const
-    {
-      // length if you can only move in
-      // straight lines on a square grid
-      return (x2-x1) + (y2 - y1);
-    }
-
-  private:
-    double x1;
-    double y1;
-
-    double x2;
-    double y2;
-};
-
-int main()
-{
-  // typedefs work with function pointers
-  // The typedef name also goes after the *
-  typedef double (Vector::*VectFnPtr)() const;
-  
-  // Ask user which length measure they want
-  int metric_choice(0);
-  std::cout << "Enter metric choice (0, 1):";
-  std::cin >> metric_choice;
-
-  // Initialise function pointer
-  // based on user choice
-  VectFnPtr length_fn = 0;
-  if ( metric_choice == 1 )
-  {
-    length_fn = &Vector::manhattanLength;
-  }
-  else
-  {
-    length_fn = &Vector::euclideanLength;
-  }
-
-  // Create a Vector
-  Vector v1(0, 0, 1, 1);
-
-  // Call whichever length function was
-  // requested, and print the result
-  double length_result = (v1.*length_fn)();
-  std::cout << "Length: " << length_result << "\n";
-
-  // Now allocate a Vector dynamically
-  Vector* v2 = new Vector(0, 0, 2, 2);
-  // Force use of manhattan length
-  length_fn = &Vector::manhattanLength;
-  length_result = (v2->*length_fn)();
-  std::cout << "Manhattan length (expect 4): "
-    << length_result << "\n";
-  
-  return 0;
-}
-\end{verbatim}
+\input{code/17-member-func-ptr-example}
 
 Everything looks fine until we hit the point where we want to call the member functions. If we have an object (or reference to an object) we first associate the member function with the object by dereferencing it (with \verb|*|) and using the member access operator (\verb|.|); then we call the function using \emph{function call brackets}---arguments, if any, would go inside these brackets:
-\begin{verbatim}
-result = (obj.*ptr)(arg, ...);
-\end{verbatim}
+
+\input{code/18-member-func-ptr-calling}
 
 This sort of makes sense. If a function pointer \texttt{ptr} holds the address of a function, then \verb|*ptr| is the function itself. Since we could normally do \verb|obj.member|, we can now do \verb|obj.*ptr|. The extra brackets are needed to get around the rules C++ has for precedence of operators; you first need to give the function pointer an object to work on, then you call it. The first set of brackets in the call construct the object--member-function pair, while the second set actually call it! If you wanted to give a member function arguments, you'd do something like:
-\begin{verbatim}
-class A {
-  public:
-    double square(double x) { return x*x; }
-};
 
-// elsewhere
-double (A::*func_ptr)(double) = &A::square;
-A my_a;
-double result = (my_a.*func_ptr)(3.14);
-\end{verbatim}
+\input{code/19-member-func-ptr-args}
 
 Obviously, if you have a pointer to an object, you use \verb|->| instead of \verb|.| so the whole thing looks like:
-\begin{verbatim}
-class A {
-  public:
-    double square(double x) { return x*x; }
-};
 
-// elsewhere
-double (A::*func_ptr)(double) = &A::square;
-A* my_a_ptr = new A;
-double result = (my_a_ptr->*func_ptr)(3.14);
-\end{verbatim}
+\input{code/20-member-func-ptr-args-ptr}
 
 Pointers to member functions actually aren't used all that often. Mostly, this is because virtual dispatch and public inheritance solve a lot of the problems for which we'd want to use pointers to member functions. The compiler will typically use pointers to member functions behind the scenes, in order to implement virtual dispatch, but you don't have to worry about that! One final note is that if you're within a class member function already, you can use \verb|this| as a pointer to the object (as per usual) in association with a pointer to member function. I'm sure you can figure out the syntax for that, by now!
 
@@ -445,66 +249,7 @@ The other reason that you rarely need pointers to member functions is that you c
 
 Functors can be called just like normal functions, only this time the name is an object, not a function! That is, you write the name of the object followed by function call brackets, into which you write any arguments that \verb|operator()| takes. An example follows, of course.
 
-\begin{verbatim}
-#include <algorithm>
-#include <iterator>
-#include <iostream>
-#include <vector>
-
-class Power {
-  public:
-    explicit Power(int pow)
-      : N(pow) {}
-
-    int operator()(int i)
-    {
-      int result(i);
-      for (int j = 1; j < N; ++j)
-      {
-        result *= i;
-      }
-      return result;
-    }
-
-  private:
-    int N;
-};
-
-int main()
-{
-  // input vector
-  // contains numbers 1, 2, 3
-  std::vector<int> input(3);
-  input[0] = 1;
-  input[1] = 2;
-  input[2] = 3;
-
-  // Create a functor which gives 
-  // us the 4th power of a number
-  Power quad(4);
-  // and use it directly on the value 2
-  std::cout << quad(2) << "\n";
-
-  // Use the same functor as the unary operator
-  // in a call to std::transform()
-  std::transform(input.begin(),
-      input.end(),
-      std::ostream_iterator<int>(std::cout, " "),
-      quad);
-  std::cout << "\n";
-
-  // And this time create a temporary Power object
-  // to pass as an argument to std::transform()
-  // (This time, we get the 8th power)
-  std::transform(input.begin(),
-      input.end(),
-      std::ostream_iterator<int>(std::cout, " "),
-      Power(8));
-  std::cout << "\n";
-
-  return 0;
-}
-\end{verbatim}
+\input{code/21-functors}
 
 The output is as follows:
 \begin{verbatim}
