@@ -425,22 +425,15 @@ You've already seen templates in use; the standard library containers are class 
 There are lots of things you can do with templates, and many subtleties with the way certain features of C++ work in the presence of templates. I only cover some of the basics below; for the rest, refer to a good book, such as\cite{Templates}.
 
 \subsection{Function Templates}\label{sec:templates_functions}
-The \verb|pow()| function provided by the math library supports arbitrary real arguments $a,b$ and returns $a^b$. While this is useful in some circumstances, there is considerable overhead involved in providing this level of generality, and in many cases it is not needed. For the most part, you'll be computing integer powers of something; indeed, by far the most common operation is to square something. It is, computationally speaking, much quicker to execute \verb|x*x| than it is to execute \verb|pow(x,2)|, but we may lose some of the expressiveness; that is, making it obvious that we're squaring something. We can do better by defining a function to square doubles, and declaring it \emph{inline} so that the compiler can optimise away the function call and replace it with the code from the function:
+The \verb|pow()| function, provided by the math library, supports arbitrary real arguments $a,b$ and returns $a^b$. While this is useful in some circumstances, there is considerable overhead involved in providing this level of generality, and in many cases it is not needed. For the most part, you'll be computing integer powers of something; indeed, by far the most common operation is to square something. It is, computationally speaking, much quicker to execute \verb|x * x| than it is to execute \verb|pow(x,2)|, but we may lose some of the expressiveness; that is, making it obvious that we're squaring something. We can do better by defining a function to square doubles, and declaring it \emph{inline} so that the compiler can optimise away the function call and replace it with the code from the function:
 
-\begin{verbatim}
-inline double square(const double& x)
-{
-  return x*x;
-}
-\end{verbatim}
+\input{code/46-square-double}
 
 With this function, we can square doubles by doing something like:
-\begin{verbatim}
-double a = 4;
-std::cout << square(a) << std::endl;
-\end{verbatim}
 
-This retains the expressiveness of the notation---it is clear that we mean to square $a$---and the compiler will (at its discretion) reduce the function call to the expression \verb|x*x|; a win-win situation!
+\input{code/47-square-double-usage}
+
+This retains the expressiveness of the notation---it is clear that we mean to square $a$---and the compiler will (at its discretion) reduce the function call to the expression \verb|x * x|; a win-win situation!
 
 But we can still do better! The code above will only square doubles (or anything that can be converted to a double). We could provide a version for ints, and a version for any type we choose which has \verb|operator*| defined, but we don't need to write all that code; most of which is duplicating the same statement, and the same logic. We can write it once in a generic way, and have the compiler generate the specific code to handle a given type when we try to use it.
 
