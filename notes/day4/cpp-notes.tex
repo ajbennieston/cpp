@@ -437,37 +437,15 @@ This retains the expressiveness of the notation---it is clear that we mean to sq
 
 But we can still do better! The code above will only square doubles (or anything that can be converted to a double). We could provide a version for ints, and a version for any type we choose which has \verb|operator*| defined, but we don't need to write all that code; most of which is duplicating the same statement, and the same logic. We can write it once in a generic way, and have the compiler generate the specific code to handle a given type when we try to use it.
 
-This is the power of \emph{function templates}. By writing code such as the following, we can provide the compiler with a template, into which it substitutes the type required at compiletime:
+This is the power of \emph{function templates}. By writing code such as the following, we can provide the compiler with a template, into which it substitutes the type required at compile time:
 
-\begin{verbatim}
-template<typename T> inline T square(const T& x)
-{
-  return x*x;
-}
-\end{verbatim}
+\input{code/48-square-template}
 
 We can use this either by explicitly specifying the template parameter, as we do when we tell a \verb|std::vector| what type it contains, or implicitly by allowing the compiler to \emph{deduce} the template parameter from the argument type (since the function argument is of type \verb|T|, which is a template parameter, the compiler will try to insert the type of an argument to \verb|square()| as the substitution for \verb|T|). Whenever the compiler hits code which makes use of a function template, it checks to see if it has already generated the code from the template (\emph{instantiating the template}) with that parameter substitution, and if not, generates it. This allows us to write code once and have the compiler produce a function for each type it is actually called with. Here's an example:
 
-\begin{verbatim}
-int a = 4;
-int b = square(a); // instantiates square<int>
+\input{code/49-square-template-usage}
 
-double c = 2.0;
-double d = square(c); // instantiates square<double>
-
-int x = 4;
-double y = square<double>(x);
-// instantiates square<double> even though the parameter
-// is of type int, because the parameter was provided
-// explicitly rather than being deduced from the function
-// arguments.
-
-std::string s = "Hello";
-std::string t = square(s);
-// Attempts to instantiate square<std::string>
-// which results in a compiler error because
-// std::string does not provide operator*
-\end{verbatim}
+\input{code/50-square-template-bad-instantiation}
 
 In the final example, the substitution for \verb|T| to \verb|std::string| causes the compilation to fail because the \verb|std::string| class does not support multiplication, but you begin to see the power of templates. If we had a \verb|Complex| class, representing complex numbers, we could define multiplication for this using \verb|operator*| and we would not need to write a new \verb|square()| function because the function template will allow the compiler to generate one for us!
 
@@ -480,47 +458,11 @@ In the same way as for function templates, it is possible to create \emph{class 
 
 The \verb|SaferDynamicArray| class dynamically allocates an array of \verb|int| objects in its constructor, and cleans up this array in its destructor. The class declaration looks something like this (modified slightly from the example in the slides):
 
-\begin{verbatim}
-class DynamicArray {
-  public:
-    explicit DynamicArray(const unsigned int size)
-    : size_(size), array(new int[size])
-    {}
-
-    ~DynamicArray() { delete[] array; }
-    
-    unsigned int size() const { return size_; }
-    int* array() { return array_; }
-  private:
-    const unsigned int size_;
-    int* array_;
-};
-\end{verbatim}
+\input{code/51-class-dynamicarray}
 
 This seems like something we might want to reuse, especially with different types (though we'd be better off using \verb|std::vector| in reality; this serves as an example of class templates only!) In order to make this reusable for different types, we must turn it into a class template. With templates, though, the definition must be available to the compiler at all times for it to be able to instantiate the template with a specific type parameter, so we're going to have to include all of the code in the header for the new \verb|DynamicArray| class template:
 
-\begin{verbatim}
-template<typename T> class DynamicArray {
-  public:
-    DynamicArray(const unsigned int size)
-     : size_(size)
-     {
-       array_ = new T[size_];
-     }
-
-    ~DynamicList()
-    {
-      delete[] array_;
-    }
-    
-	unsigned int size() const { return size_; }
-    T* array() { return array_; }
-
-  private:
-    const int size_;
-    T* array_;
-};
-\end{verbatim}
+\input{code/52-template-dynamicarray}
 
 That's it! Now, we can use the type \verb|DynamicArray<int>| wherever we used to use the old version, but we get \verb|DynamicArray<double>| and \verb|DynamicArray<Particle>| (and so on) for free! 
 
@@ -533,76 +475,25 @@ You have probably noticed that if you want to push multiple elements onto a vect
 
 The comma operator is used to separate expressions such that one is evaluated, then the next. For instance, you could write a loop where you have one control variable and another dependent variable as follows:
 
-\begin{verbatim}
-void reverse(double* array1, double* array2, const int size)
-{
-  for(int i = 0, j = size-1; i < size; ++i, --j)
-  {
-    array2[j] = array1[i];
-  }
-}
-\end{verbatim}
+\input{code/53-comma-operator}
 
 This code writes the elements in \verb|array1| into \verb|array2| in reverse order. Note the use of the comma operator in the final part of the for loop; to increment i and decrement j. When the comma operator is used, the left-hand expression is evaluated first, followed by the right-hand expression. The operator can be used multiple times and, like many operators in C++, it can be overloaded.
 
 This gives us a hint as to how we might improve assignment to vectors. Ultimately, we might want to be able to write something like:
 
-\begin{verbatim}
-std::vector<int> myVec;
-myVec += 1, 2, 3, 4, 5;
-\end{verbatim}
+\input{code/54-desired-vector-init}
 
-and have the elements $1, 2, 3, 4$ and $5$ pushed onto the vector in turn. Looking at the code, it's clear that we need to provide two operators: \verb|operator+=| and \verb|operator,|. Here's the code for them:
+In this case, we want the elements $1, 2, 3, 4$ and $5$ to be pushed onto the vector in turn. Looking at the code, it's clear that we need to provide two operators: \verb|operator+=| and \verb|operator,|. Here's the code for them:
 
-\begin{verbatim}
-std::vector<int>& operator+=(std::vector<int>& v, int element)
-{
-  v.push_back(element);
-  return v;
-}
-
-std::vector<int>& operator,(std::vector<int>& v, int element)
-{
-  v.push_back(element);
-  return v;
-}
-\end{verbatim}
+\input{code/55-operators-for-vector-init}
 
 With these functions, we can write precisely the code that we wanted. It will now work as expected and push the elements one-by-one onto the vector. Now to make it more generic. We don't want to write this for every possible type a vector can contain, so let's make the vector's parameter a template parameter in our own functions:
 
-\begin{verbatim}
-template<typename T>
-std::vector<T>& operator+=(std::vector<T>& v, T element)
-{
-  v.push_back(element);
-  return v;
-}
-
-template<typename T>
-std::vector<T>& operator,(std::vector<T>& v, T element)
-{
-  v.push_back(element);
-  return v;
-}
-\end{verbatim}
+\input{code/56-templates-for-vector-init}
 
 We can get away with this because template operators, just like ordinary template functions, can have their parameters deduced from their arguments. But this still isn't as generic as it could be. What we want is to write these functions just once and have them work with \emph{any} standard library sequence container. We know that standard library containers provide a typedef \verb|value_type| which is the type stored in them. Armed with this knowledge, we can make a further generalisation:
 
-\begin{verbatim}
-template<typename T>
-T& operator+=(T& v, typename T::value_type element)
-{
-  v.push_back(element);
-  return v;
-}
-
-template<typename T>
-T& operator,(T& v, typename T::value_type element)
-{
-  v.push_back(element);
-  return v;
-}
-\end{verbatim}
+\input{code/57-templates-for-container-init}
 
 What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these function templates and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
 
@@ -610,26 +501,12 @@ This is getting to be a little complicated now, but the generality we've gained 
 
 \subsection{Dependent types and the \texttt{typename} keyword}
 You've already seen \verb|typename| used in template parameter lists, but there is another use for it, and it was demonstrated in the operator examples of the previous section:
-\begin{verbatim}
-template<typename T>
-T& operator+=(T& v, typename T::value_type element)
-{
-  v.push_back(element);
-  return v;
-}
 
-template<typename T>
-T& operator,(T& v, typename T::value_type element)
-{
-  v.push_back(element);
-  return v;
-}
-\end{verbatim}
+\input{code/58-dependent-types}
 
 Here, we say something rather unusual for the second argument
-\begin{verbatim}
-typename T::value_type element
-\end{verbatim}
+
+\input{code/59-typename-dependent-type}
 
 We have to say \verb|typename| here because \verb|value_type| is what C++ calls a \emph{dependent type}; that is, it depends on the template parameter \verb|T|. In general, until the template is instantiated, the compiler cannot know what \verb|value_type| is. It could either be a nested type (either via a typedef or nested class declaration), or it could be a static member variable. In order to forcibly resolve the ambiguity, one must specify that we are referring to a type name, with the \verb|typename| keyword. Even in the example above, where it is obvious from the context that we are naming a type, we must explicitly tell the compiler this.\footnote{See \url{http://pages.cs.wisc.edu/~driscoll/typename.html} for more details on when to use \texttt{typename}, and why it is necessary.} 
 
