@@ -1,11 +1,16 @@
+.PHONY: all clean code
+
 all: cpp-notes.pdf
 
-cpp-notes.pdf: cpp-notes.tex
+cpp-notes.pdf: cpp-notes.tex code
 	pdflatex cpp-notes
 	pdflatex cpp-notes
 	#bibtex cpp-notes
 	pdflatex cpp-notes
 	pdflatex cpp-notes
+
+code:
+	$(MAKE) -C code PROCESS_CODE=../../process-code.py
 
 clean:
 	rm -f *.aux
@@ -13,6 +18,7 @@ clean:
 	rm -f *.toc
 	rm -f *.out
 	rm -f cpp-notes.pdf
+	$(MAKE) -C code clean
 
 read: cpp-notes.pdf
-	acroread cpp-notes.pdf
+	acroread cpp-notes.pdf &

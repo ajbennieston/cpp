@@ -35,6 +35,22 @@
 %\bibliographystyle{unsrtnat} % `Plain' unsrtnat.bst
 \bibliographystyle{ajbunsrtnat} % Modified unsrtnat.bst to make article titles emphasized
 
+% Make code listings look good
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+    basicstyle=\small\ttfamily,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    tabsize=2,
+    extendedchars=true,
+    breaklines=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keywordstyle=\textbf,
+    language=C++
+}
 \title{Computing Course Day 5\\
 Notes \& Discussion\\
 Second Edition}
@@ -67,49 +83,19 @@ You open a namespace with the \verb|namespace| keyword. Anything you define insi
 
 In the example below, we define a type \verb|Foo| and a function \verb|makeFoo()| in the namespace \verb|Foo|. Note that since namespaces do not name types, you can use the same names as for classes or functions without issue. This is probably not a good idea, but it often happens when you want to wrap a single class plus its utility functions inside a namespace.
 
-\begin{verbatim}
-// Foo.hpp
-namespace Foo {
-  
-  class Foo {
-    public:
-      Foo(int an_x) : x(an_x) {}
-      int x;
-  };
-
-  Foo* makeFoo(const int& some_x)
-  {
-    return new Foo(some_x);
-  }
-
-} // end namespace Foo
-\end{verbatim}
+\input{code/01-namespaces}
 
 Within the namespace, you don't need to do anything special to use the names defined; you can see this in the example above in the return type of \verb|makeFoo()|. Outside of the namespace, you must use the \emph{scope resolution operator} \verb|::| to specify the namespace:\footnote{See the section on argument dependent lookup for exceptions to this rule!}
 
-\begin{verbatim}
-#include <iostream>
-#include "Foo.hpp"
-
-int main()
-{
-  Foo::Foo* fp = Foo::makeFoo(42);
-  std::cout << fp->x << "\n";
-  return 0;
-}
-\end{verbatim}
+\input{code/02-use-namespaces}
 
 Here, we used the scope resolution operator to tell the compiler that both the type \verb|Foo| and the function \verb|makeFoo()| are in namespace \verb|Foo|. Exactly the same thing is going on when you say \verb|std::cout|; you're telling the compiler that the symbol named \verb|cout| is in namespace \verb|std|.
 
 \textbf{The point of namespaces is to provide separation of names; for this reason, it is considered very bad form to make use of \emph{using declarations} such as \texttt{using namespace std;} (and, often even \texttt{using std::cout;}) since these import names from a namespace into the global scope (or, whatever scope the using declaration is in). This defeats the whole point of using namespaces, and is a {\sc really bad idea}.}
 
 If you declare a class inside a namespace (within a header file), you can define its functions in a source file almost exactly as before, but with an additional application of the scope resolution operator to name the namespace. The example below shows how the \texttt{Particle::getThreeMomentum()} function implementation would look if the \texttt{Particle} class (and associated classes \texttt{ThreeVector} and \texttt{FourVector}) had been declared in some namespace \texttt{Physics}:
-\begin{verbatim}
-Physics::ThreeVector& Physics::Particle::getThreeMomentum() const
-{
-  return momentum.getThreeVector();
-}
-\end{verbatim}
+
+\input{code/03-namespaced-member-function}
 
 Once again, we provided the scope of the \verb|ThreeVector| class used for the return type as well as that of the type \verb|Particle|, whose method we are implementing.
 
@@ -123,9 +109,9 @@ You may have noticed that in your solutions to the day 4 exercises, you probably
 This is why \verb|operator<<| works with the \verb|std::cout| object. The form of \verb|operator<<| used (most of the time) is defined in the \verb|std| namespace, but you don't have to say \verb|std::operator<<(std::cout, "Hello")| to use it! The compiler notices that (at least) one of the arguments to \verb|operator<<| is defined in namespace \verb|std|, so it considers the definition \verb|std::operator<<(...)| to be a match, as well as any variants which may be defined in the current scope.
 
 Argument dependent lookup is mostly used to ensure that operator overloading will always work,\footnote{See \url{http://en.wikipedia.org/wiki/Argument-dependent_name_lookup} for more detail on ADL.} but it also has the side effect of making the \emph{unqualified} calls to \verb|sort()| or \verb|transform()| find the true definitions \verb|std::sort()| and \verb|std::transform()|. Of course, if the arguments were not standard library iterators (if you used pointers to an array, for instance), the compiler would not be able to pick up a namespace and would produce an error saying something along the lines of ``\verb|sort()| is not defined in this scope.'' For this reason it is always a good idea to use the scope resolution operator and specify the namespace manually. Note that you can specify ``the global scope'' by using \verb|::| with no name before it:
-\begin{verbatim}
-::swap(a, b);
-\end{verbatim}
+
+\input{code/04-global-swap}
+
 This example will always use a version of swap from the global namespace, even if \verb|std::swap()| has been defined and one of \verb|a| or \verb|b| are in namespace \verb|std| (this may not play well with \texttt{using namespace std;}).
 
 \section{Inheritance \& type sharing}\label{sec:inheritance}
@@ -134,14 +120,7 @@ In the exercises for day 5 you saw that public inheritance can be used for \emph
 \subsection{Abstract Base Classes}
 To write an abstract base class, produce a class which contains only public member functions, declares them all as \verb|virtual| and provides no definitions (except for the destructor). You must also say that the virtual function \verb|= 0| in order to declare it pure virtual:
 
-\begin{verbatim}
-class EventGenerator {
-  typedef std::vector<Particle> DecayProducts;
-  virtual ~EventGenerator() {} // virtual dtor and trivial function body
-
-  virtual DecayProducts generate(const double beta_z_mother) const = 0;
-};
-\end{verbatim}
+\input{code/05-abstract-base-class}
 
 The reason that the destructor must be virtual is that if an object of derived class type (e.g. \verb|TwoBodyEventGenerator|) was created on the heap and assigned to a pointer to base class type (i.e. \verb|EventGenerator|), a \verb|delete| operation on that pointer must call the destructor of the derived class, so it has to be virtual.
 
@@ -150,47 +129,7 @@ A virtual function is one which is resolved at runtime, as opposed to compile ti
 
 The classic example is that of dealing with different shapes. Consider a class which (amongst other things) calculates the area of a shape from its (internally stored) geometry. We'll assume that the geometry is suitably defined, and concentrate on the parts of the class important to demonstrate virtual functions:
 
-\begin{verbatim}
-class Shape {
-  public:
-    virtual ~Shape() {}
-    virtual double area() const = 0;
-};
-
-class Triangle : public Shape {
-  public:
-    virtual ~Triangle() {}
-    virtual double area() const { return base * height / 2.0; }
-  public:
-    double base;
-    double height;
-};
-
-class Circle : public Shape {
-  public:
-    virtual ~Circle() {}
-    virtual double area() const { return pi * r * r; }
-  private:
-    const double pi;
-    double r;
-};
-
-class Rectangle : public Shape {
-  public:
-    virtual ~Rectangle() {}
-    virtual double area() const { return length * width; }
-  private:
-    double length;
-    double width;
-};
-
-int main()
-{
-  Shape* s = new Circle(4);
-  std::cout << s->area() << std::endl;
-  return 0;
-}
-\end{verbatim}
+\input{code/06-virtual-functions}
 
 In the (trivial) example above, when the \verb|s->area()| call is resolved at runtime, the function called will be \verb|Circle::area()| rather than the (nonexistent) \verb|Shape::area()|. If the object created was instead a \verb|Triangle|, it would be \verb|Triangle::area()| that was called.
 
@@ -203,7 +142,7 @@ In the (trivial) example above, when the \verb|s->area()| call is resolved at ru
 
 The mechanism which allows virtual functions to exist is fairly complicated, and introduces some \emph{runtime overhead} over and above the usual function call mechanism.
 
-The usual implementation (though not specified by the standard, so some implementations may use a different approach) is to add a hidden pointer called a \emph{vpointer} (virtual table pointer) to each object which has virtual functions. This pointer points to the \emph{vtable} (virtual function table) for the object. The \verb|vtable| contains pointers to the functions themselves. There is one vtable per class (that is, one providing a list of function pointers for \verb|Triangle|, one for \verb|Circle| and one for \verb|Rectangle|). The objects each hold a vpointer which is set in the constructor (by the compiler) to point to the correct vtable.
+The usual implementation (though not specified by the standard, so some implementations may use a different approach) is to add a hidden pointer called a \emph{vpointer} (virtual table pointer) to each object which has virtual functions. This pointer points to the \emph{vtable} (virtual function table) for the object. The vtable contains pointers to the functions themselves. There is one vtable per class (that is, one providing a list of function pointers for \verb|Triangle|, one for \verb|Circle| and one for \verb|Rectangle|). The objects each hold a vpointer which is set in the constructor (by the compiler) to point to the correct vtable.
 
 When the runtime environment hits a virtual function call, it first dereferences the object's vpointer to obtain the correct vtable, which it uses to look up the correct function to eventually call. This involves two levels of indirection (dereferencing of two pointers; the vpointer and a pointer in the vtable) before the correct function address is determined and code execution can continue. This introduces substantial runtime overhead compared to static dispatch, where the address of the function can be determined at compile time. Figure \ref{virtual_dispatch} illustrates this.
 
@@ -216,38 +155,8 @@ In C++, functions can be \emph{overloaded}; that is, multiple versions of a func
 In a class hierarchy involving virtual member functions, there is a related concept: that of \emph{overriding}. You do this whenever you implement a virtual function in a derived class (i.e. you override the implementation from the base class with the implementation in your derived class). This is not the same as overloading, since with overloads both versions are available, but with overrides you only get the derived version (assuming you have a pointer to an object of the correct type!) What you're doing is providing a new function body for the same function signature; contrast this with overloading, where you're providing a different function signature and (possibly) different function body.
 
 In the example below, we provide a function \verb|speak()| in the base class \emph{Animal}, and \emph{override} it in the derived classes \verb|Cat| and \verb|Dog|.
-\begin{verbatim}
-class Animal {
-  public:
-    virtual void speak()
-    {
-      std::cout << "I am a nondescript Animal!\n";
-    }
-};
 
-class Cat : public Animal {
-  public:
-    virtual void speak()
-    {
-      std::cout << "I am a highly intelligent cat! Feed me! Meow!\n";
-    }
-};
-
-class Dog : public Animal {
-  public:
-    virtual void speak()
-    {
-      std::cout << "I'm a dumb dog. Oh look, a stick. Woof!\n";
-    }
-};
-
-int main()
-{
-  Animal* schrodinger = new Cat;
-  schrodinger->speak();
-  return 0;
-}
-\end{verbatim}
+\input{code/07-overriding-member-functions}
 
 In the main function the call to \verb|schrodinger->speak()| is absolutely unambiguous. The object has dynamic type \verb|Cat|, so we get \verb|Cat::speak()|. This is the main difference between overloading and overriding. When we override, we still only have one option. If we overloaded, we'd have versions of \verb|Cat::speak()| that took different numbers or types of arguments, and the compiler would choose one based on the number and type of arguments when the function call is made. When we override, the signatures are identical and the runtime environment chooses which function to call based on the dynamic type of the object.
 
