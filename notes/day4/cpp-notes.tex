@@ -377,21 +377,7 @@ You may be wondering why iterators are more useful than pointers. The idea is th
 \subsection{\texttt{const\_iterator}s}
 If you're iterating over a const container, you'll only be able to get \verb|const_iterator| objects. In fact, you can always use these if you don't want to be able to change the elements over which you're iterating (e.g. for output operations):
 
-\begin{verbatim}
-std::vector<int> numbers;
-for(int i = 0; i < 10; ++i)
-{
-  numbers.push_back(i);
-}
-
-std::vector<int>::const_iterator iter = numbers.begin();
-const std::vector<int>::const_iterator end = numbers.end();
-while ( iter != end )
-{
-  std::cout << *iter << std::endl;
-  ++iter;
-}
-\end{verbatim}
+\input{code/40-const-iterator}
 
 A \verb|const_iterator| won't let you change the value it ``points'' to, just like a \verb|const int *| won't let you change the \verb|int| it points to. Note that we can still do \verb|++iter|; the iterator itself is not constant! The \verb|end| iterator, though, should never be changed, so we make this a \verb|const| \verb|const_iterator|; i.e. neither the iterator nor the value to which it points can be changed.
 
@@ -400,40 +386,18 @@ When you iterate over a standard library map, the iterator points to a \verb|std
 
 \subsection{Stream iterators and inserters}
 There are two special kinds of iterator that it is useful to know about. The first are \emph{stream iterators}. These iterate over input or output streams, and you saw an example in the day 4 slides for writing the contents of a \verb|std::vector| to an output stream:
-\begin{verbatim}
-std::vector<int> v;
-v.push_back(1);
-v.push_back(2);
-v.push_back(3);
-v.push_back(4);
 
-std::copy(v.begin(), v.end(),
-    std::ostream_iterator<int>(std::cout, "\n"));
-\end{verbatim}
+\input{code/41-stream-iter}
 
 This code uses the \verb|std::copy()| algorithm to copy the elements of vector v into the output sequence defined by the \verb|std::ostream_iterator|, which writes each element to the stream provided as its first argument, separated by the character sequence given as its second argument.
 
 There is also \verb|std::istream_iterator| which takes its elements from an input stream. In the example below, we read from \verb|std::cin| until we hit the ``end of file''
-\begin{verbatim}
-#include <iostream>
-#include <iterator>
 
-int main()
-{
-    std::istream_iterator<int> input(std::cin);
-    std::istream_iterator<int> end;
-    for(; input != end; ++input)
-    {
-        int value = *input;
-        std::cout << value * value << "\n";
-    }
-    return 0;
-}
-\end{verbatim}
+\input{code/42-istream-iterator}
 
 If we run this, we get:
 \begin{verbatim}
-soulor$ echo "1 2 3 4 5" | ./istream_iter 
+$ echo "1 2 3 4 5" | ./istream_iter 
 1
 4
 9
@@ -442,34 +406,21 @@ soulor$ echo "1 2 3 4 5" | ./istream_iter
 \end{verbatim}
 
 Of course, we could use \verb|std::copy| to copy directly from an input stream to an output stream:
-\begin{verbatim}
-std::copy(std::istream_iterator<int>(std::cin),
-    std::istream_iterator<int>(),
-    std::ostream_iterator<int>(std::cout, "\n"));
-\end{verbatim}
+
+\input{code/43-stream-to-stream-copy}
 
 But what if we want to implement the reverse of the first example in this section; reading elements from an input stream into a container? This is where the \verb|std::back_inserter| function comes in. It generates a \verb|std::back_insert_iterator| for the container passed as its argument. This iterator will push elements onto the back (end) of the container:
-\begin{verbatim}
-std::vector<int> v;
-std::copy(std::istream_iterator<int>(std::cin),
-    std::istream_iterator<int>(),
-    std::back_inserter(v));
-\end{verbatim}
+
+\input{code/44-stream-iter-and-inserter}
 
 Consequently, the code above will read integers from \verb|std::cin| (until the ``end of file'') and fill a \verb|std::vector<int>| with them. You may want to \verb|reserve()| some capacity in the vector before you perform operations like this!
 
 You can use \verb|back_insert_iterator| for many other tasks; the code below creates an \verb|extend()| function, which extends one vector with the contents of another (see section \ref{sec:templates} for more details on template functions:
-\begin{verbatim}
-template<typename T>
-void extend(std::vector<T>& v1, const std::vector<T>& v2)
-{
-  std::copy(v2.begin(), v2.end(), std::back_inserter(v1));
-}
-\end{verbatim}
 
+\input{code/45-extend}
 
 \section{Templates}\label{sec:templates}
-You've already seen templates in use; the standard library containers are template classes which allow you to specify the type(s) contained as a parameter. In this section we'll explore some of the things you can do with templates, and demonstrate the power of \emph{generic programming}, one of the key concepts in C++. In the broadest sense, this is a philosophy by which you write as little code as possible, and repeat almost none of it. That is, if you can write something once in a generic way, so as to be applicable to a variety of situations, that is better than writing a version which is highly specialised to a single application.
+You've already seen templates in use; the standard library containers are class templates which allow you to specify the type(s) contained as a parameter. In this section we'll explore some of the things you can do with templates, and demonstrate the power of \emph{generic programming}, one of the key concepts in C++. In the broadest sense, this is a philosophy by which you write as little code as possible, and repeat almost none of it. That is, if you can write something once in a generic way, so as to be applicable to a variety of situations, that is better than writing a version which is highly specialised to a single application.
 
 There are lots of things you can do with templates, and many subtleties with the way certain features of C++ work in the presence of templates. I only cover some of the basics below; for the rest, refer to a good book, such as\cite{Templates}.
 
@@ -531,8 +482,8 @@ Note that templates are a compile-time thing; you save on writing code, but the 
 
 Template parameter deduction allows the compiler to determine the type of template parameters from the arguments to the function. This can be very useful, as you've seen in the code above, since we do not need to specify the type manually (provided it can be deduced).
 
-\subsection{Template classes}
-In the same way as for function templates, it is possible to create \emph{template classes}. The standard library includes many of these, but we'll look at a simple example; converting the \verb|SaferDynamicArray| class from the day three slides into a template class.
+\subsection{Class templates}
+In the same way as for function templates, it is possible to create \emph{class templates}. The standard library includes many of these, but we'll look at a simple example; converting the \verb|SaferDynamicArray| class from the day three slides into a class template.
 
 The \verb|SaferDynamicArray| class dynamically allocates an array of \verb|int| objects in its constructor, and cleans up this array in its destructor. The class declaration looks something like this (modified slightly from the example in the slides):
 
@@ -553,7 +504,7 @@ class DynamicArray {
 };
 \end{verbatim}
 
-This seems like something we might want to reuse, especially with different types (though we'd be better off using \verb|std::vector| in reality; this serves as an example of template classes only!) In order to make this reusable for different types, we must turn it into a template class. With templates, though, the definition must be available to the compiler at all times for it to be able to instantiate the template with a specific type parameter, so we're going to have to include all of the code in the header for the new \verb|DynamicArray| template class:
+This seems like something we might want to reuse, especially with different types (though we'd be better off using \verb|std::vector| in reality; this serves as an example of class templates only!) In order to make this reusable for different types, we must turn it into a class template. With templates, though, the definition must be available to the compiler at all times for it to be able to instantiate the template with a specific type parameter, so we're going to have to include all of the code in the header for the new \verb|DynamicArray| class template:
 
 \begin{verbatim}
 template<typename T> class DynamicArray {
@@ -580,7 +531,7 @@ template<typename T> class DynamicArray {
 
 That's it! Now, we can use the type \verb|DynamicArray<int>| wherever we used to use the old version, but we get \verb|DynamicArray<double>| and \verb|DynamicArray<Particle>| (and so on) for free! 
 
-Note that you can also use function templates within template classes, providing for incredibly powerful, incredibly generic templates!
+Note that you can also use function templates within class templates, providing for incredibly powerful, incredibly generic templates!
 
 \subsection{Templates in action}
 There's a lot more that you can do with templates. For a more detailed reference, see\cite{Templates}. Here, though, I'll demonstrate one neat trick for making life easier...
@@ -662,7 +613,7 @@ T& operator,(T& v, typename T::value_type element)
 
 What we've done here is to define them as a template for any type \verb|T|. These operators will now be considered whenever the compiler hits a \verb|+=| or a \verb|,|. But they'll only be used when the type which the compiler substitutes for \verb|T| also contains a \verb|value_type| typedef! You will still be able to use \verb|+=| on integers, doubles, and anything else for which it is defined, because the compiler will look at these function templates and decide that they are not a match for those types since it would be unable to instantiate \verb|int::value_type| or \verb|double::value_type| (since they do not exist). There is not a compiler error unless \emph{no other candidate exists} for the operation. This is a principle known as \emph{substitution failure is not an error} (SFINAE) and allows us to write code such as that above without having to worry that addition-with-assignment will fail on built-in types now!
 
-This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| member function; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on function templates, template classes, and \emph{template metaprogramming}!
+This is getting to be a little complicated now, but the generality we've gained is clear: we can now use the shorthand assignment notation we wanted not only for vectors of any type, but for any standard library sequence container of any type! As long as the container provides a \verb|value_type|, this will match. A further constraint is that the container provides a \verb|push_back()| member function; otherwise any attempt by the compiler to instantiate the template will result in an error! Of course, if we wanted to be fully general, we'd have to provide a template specialisation for the associative container types, so as to include their keys and values (but this is beyond the scope of this document). See\cite{Templates} for much more on function templates, class templates, and \emph{template metaprogramming}!
 
 \subsection{Dependent types and the \texttt{typename} keyword}
 You've already seen \verb|typename| used in template parameter lists, but there is another use for it, and it was demonstrated in the operator examples of the previous section:
@@ -705,7 +656,7 @@ Not only does it handle the conversion, as well as checking for possible problem
 Remember, however, that boost is not part of the standard, and it is not available everywhere. Use it wisely, but do explore some of the things it has to offer; they will make your (programming) life much simpler.
 
 \subsection{Smart pointers}\label{sec:boost_smart_ptr}
-Smart pointers are a perfect example of RAII (Resource Acquisition Is Initialisation) since a smart pointer takes ownership of a resource when it is constructed, and frees up the resource when it is destroyed. The dumbest smart pointer is \verb|std::auto_ptr| which deletes the pointer it holds as soon as it goes out of scope. This is useful in some limited circumstances, but the real power of smart pointers comes in their ability to define more complex ownership. The \verb|boost::shared_ptr<T>| is a template class which holds a pointer to an object of type \verb|T| (a template parameter to be filled in with some real type) as well as keeping track of \emph{how many} other \verb|boost::shared_ptr| objects have a copy of that pointer. Only when the last \verb|boost::shared_ptr| which holds that specific pointer goes out of scope is the resource to which it points deleted. The boost library provides several smart pointers, in the Boost.SmartPtr library.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/smart_ptr/smart_ptr.htm}}
+Smart pointers are a perfect example of RAII (Resource Acquisition Is Initialisation) since a smart pointer takes ownership of a resource when it is constructed, and frees up the resource when it is destroyed. The dumbest smart pointer is \verb|std::auto_ptr| which deletes the pointer it holds as soon as it goes out of scope. This is useful in some limited circumstances, but the real power of smart pointers comes in their ability to define more complex ownership. The \verb|boost::shared_ptr<T>| is a class template which holds a pointer to an object of type \verb|T| (a template parameter to be filled in with some real type) as well as keeping track of \emph{how many} other \verb|boost::shared_ptr| objects have a copy of that pointer. Only when the last \verb|boost::shared_ptr| which holds that specific pointer goes out of scope is the resource to which it points deleted. The boost library provides several smart pointers, in the Boost.SmartPtr library.\footnote{\url{http://www.boost.org/doc/libs/1_45_0/libs/smart_ptr/smart_ptr.htm}}
 
 \section{The singleton design pattern}\label{sec:singleton}
 A design pattern is a solution to a common software engineering problem. It is, in some sense, a generic recipe to follow in order to solve a certain kind of problem, either in a specific case or more generally. Design patterns are essentially solutions which have been tried and tested, proven to work and heavily documented.
