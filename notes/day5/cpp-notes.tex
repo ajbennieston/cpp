@@ -167,7 +167,9 @@ Consider the class hierarchy below. In \verb|Base| we define a function \verb|fu
 
 \input{code/08-hiding}
 
-We might expect this to work; that is, our derived class should have the overloaded functions \texttt{void func(int x)} and \texttt{void func(std::string x)}. The compiler, however, has other ideas, and will typically warn you that ``\texttt{Derived::func(std::string)} hides \texttt{Base::func(int)}''.
+We might expect this to work; that is, our derived class should have the overloaded functions \texttt{void func(int x)} and \texttt{void func(std::string x)}. The compiler, however, has other ideas, issuing a warning along the lines of:
+
+``\texttt{Derived::func(std::string)} hides \texttt{Base::func(int)}''.
 
 By defining a function named \verb|func| in the derived class, we hide any functions of the same name from the base class. In order to bring those into the scope of the derived class, we need a \emph{using declaration}:
 
@@ -331,8 +333,8 @@ The following books deal with recurring themes in C++ systems and some of the pa
 The definitive source of information on C++. While most textbooks will give you the usual behaviour, the standard is the precise specification of how C++ behaves in every circumstance.
 
 \begin{itemize}
-	\item The C Standard, \emph{British Standards Institute}, Wiley, 2003. The definition of ISO/IEC 9899:1999 (The C Programming Language).
-	\item The C++ Standard, \emph{British Standards Institute}, Wiley, 2003. The definition of ISO/IEC 14882:2003 (The C++ Programming Language).
+	\item The C Standard, \emph{British Standards Institute}, Wiley, 2003. The official definition of ISO/IEC 9899:1999 (The C Programming Language).
+	\item The C++ Standard, \emph{British Standards Institute}, Wiley, 2003. The official definition of ISO/IEC 14882:2003 (The C++ Programming Language).
 	\item JTC1/SC22/WG21 - The C++ Standards Committee, \url{http://open-std.org/JTC1/SC22/WG21/}. Public draft releases of the C++ 2011 standard (ISO/IEC 14882:2011) and additional material.
 \end{itemize}
 

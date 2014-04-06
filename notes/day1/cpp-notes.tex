@@ -125,7 +125,7 @@ In the code above, the user is given the opportunity to specify the starting poi
 \section{Variable Naming Schemes}
 In C++, there is no (practical) limit on the length of variable names. While you should keep names simple to avoid typos, this allows you to make variables more descriptive than \texttt{int n} or \texttt{double p}. You could, for instance, use \texttt{int event\_count} or \texttt{double proton\_momentum}. Avoid \texttt{UPPERCASE\_NAMES} since these are typically used for preprocessor macros (which should be avoided at all costs). Names beginning with an underscore should not be used since the C++ standard library and compiler implementations might use variables with this naming convention internally. See also table \ref{keywords} for a list of language keywords, which cannot be used as names.
 
-The same rules apply to function and class names, but usually a local coding style will exist to define a \emph{convention} for naming such things. Typically this involves e.g. naming all classes with uppercase letters at the beginning of each word, such as \texttt{LorentzVector} or \texttt{LinearDifferentialEquation}, while functions will either be \texttt{some\_function\_name()} or \texttt{someFunctionName()}. Naming conventions vary, but the important thing is to pick one and stick with it.
+The same rules apply to function and class names, but usually a local coding style will exist to define a \emph{convention} for naming such things. Typically this involves e.g. naming all classes with uppercase letters at the beginning of each word, such as \texttt{LorentzVector} or \texttt{LinearDifferentialEquation}, while function names will look something like \texttt{some\_function\_name()} or \texttt{someFunctionName()}. Naming conventions vary, but the important thing is to pick one and stick with it.
 
 \section{Keywords}
 The C++ standard reserves certain words, known as \emph{keywords} for use by the language itself. The complete list is given in table \ref{keywords}. These cannot be used for variable names. The C++ Standard\cite{C++Standard} defines these names.
@@ -171,7 +171,7 @@ In the slides for day 1 you were told to use something like:
 
 \input{code/07-clearing-stream-failure-INT_MAX}
 
-This behaves broadly equivalently, except that \texttt{INT\_MAX} is a C macro defined in \texttt{<climits>} (the old C \texttt{<limits.h>}; see table \ref{c-cpp-headers}). Macros should be avoided wherever possible, so the code that uses \texttt{std::streamsize} is preferred.
+This behaves broadly equivalently, except that \texttt{INT\_MAX} is a C macro defined in the header \texttt{<climits>} (the old C \texttt{<limits.h>}; see table \ref{c-cpp-headers}). Macros should be avoided wherever possible, so the code that uses \texttt{std::streamsize} is preferred.
 
 \section{Numeric Limits}\label{numeric-limits}
 In C, the \texttt{<limits.h>} header provided macros such as \texttt{INT\_MAX} which represents the largest value which can be stored in an \texttt{int}. These are available in C++ through the \texttt{<climits>} header, but there is a better way. The \texttt{<limits>} header provides a mechanism for obtaining information about the limits (min value, max value, etc.) for many different types in a consistent way. If you want the equivalent to \texttt{INT\_MAX}, you'd do something like:

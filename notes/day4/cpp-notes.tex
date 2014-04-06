@@ -203,7 +203,7 @@ The second erases the single element pointed to by the iterator \texttt{p}, whil
 There are a number of member functions for finding things in the string. The first set look for one string in another, with the search string specified in a number of ways (another \texttt{std::string}, a C string or a single character):
 \input{code/22-string-find}
 
-There are also several functions for finding the positions of characters within a string, having names of the form \texttt{find\_first\_of()}, \texttt{find\_last\_of()}, \texttt{find\_first\_not\_of()} and \texttt{find\_last\_not\_of()}. These look for the first or last character which matches or doesn't match one of the characters in the search string. Again, they take \texttt{std::string}, \texttt{char*} or \texttt{char} arguments. These can be used to find, for example, the first non-whitespace element in a string. The code below takes a string which may have whitespace to the left and right, and returns a string which has no whitespace surrounding it.
+There are also several functions for finding the positions of characters within a string, including \texttt{find\_first\_of()}, \texttt{find\_last\_of()}, \texttt{find\_first\_not\_of()} and finally \texttt{find\_last\_not\_of()}. These look for the first or last character which matches or doesn't match one of the characters in the search string. Again, they take \texttt{std::string}, \texttt{char*} or \texttt{char} arguments. These can be used to find, for example, the first non-whitespace element in a string. The code below takes a string which may have whitespace to the left and right, and returns a string which has no whitespace surrounding it.
 \input{code/23-string-trim}
 
 I've also used the \texttt{substr()} function to extract a substring, which I'll describe in more detail later.
@@ -308,7 +308,7 @@ Map elements are key/value pairs; that is, the class is \verb|std::map<T1, T2>| 
 Maps can be used as associative arrays, where one can look up the value associated with a given key:
 \input{code/28-map-associative}
 
-Note that the \verb|std::map| does not provide \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| member function, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
+Note that the \verb|std::map| does not provide a const version of the lookup operator, i.e. \verb|operator[](const key_type&) const|; in other words, you cannot use the square-bracket lookup notation on a const map (or a map which is const by virtue of being the member of an object of which a const member function is being executed...) In order to look up values in a const map, you can use its \verb|find()| member function, which returns an iterator to the element if it exists, or an end iterator if it does not. See section \ref{sec:iter} for more on iterators, and\cite{StandardLibrary} for more on algorithms.
 
 \input{code/29-map-find}
 
@@ -379,7 +379,7 @@ If you're iterating over a const container, you'll only be able to get \verb|con
 
 \input{code/40-const-iterator}
 
-A \verb|const_iterator| won't let you change the value it ``points'' to, just like a \verb|const int *| won't let you change the \verb|int| it points to. Note that we can still do \verb|++iter|; the iterator itself is not constant! The \verb|end| iterator, though, should never be changed, so we make this a \verb|const| \verb|const_iterator|; i.e. neither the iterator nor the value to which it points can be changed.
+A \verb|const_iterator| won't let you change the value it ``points'' to, in the same way that a \verb|const int *| won't let you change the \verb|int| it points to. Note that we can still do \verb|++iter|; the iterator itself is not constant! The \verb|end| iterator, though, should never be changed, so we make this a \verb|const| \verb|const_iterator|; i.e. neither the iterator nor the value to which it points can be changed.
 
 \subsection{Iterators on \texttt{std::map}}
 When you iterate over a standard library map, the iterator points to a \verb|std::pair| object representing the key and value of that position in the map. They can be accessed as \verb|iter->first| for the key and \verb|iter->second| for the value.
@@ -409,7 +409,7 @@ Of course, we could use \verb|std::copy| to copy directly from an input stream t
 
 \input{code/43-stream-to-stream-copy}
 
-But what if we want to implement the reverse of the first example in this section; reading elements from an input stream into a container? This is where the \verb|std::back_inserter| function comes in. It generates a \verb|std::back_insert_iterator| for the container passed as its argument. This iterator will push elements onto the back (end) of the container:
+But what if we want to implement the reverse of the first example in this section; reading elements from an input stream into a container? This is where \verb|std::back_inserter| comes in. It generates a \verb|std::back_insert_iterator| for the container passed as its argument. This iterator will push elements onto the back (end) of the container:
 
 \input{code/44-stream-iter-and-inserter}
 

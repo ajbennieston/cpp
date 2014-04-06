@@ -302,13 +302,13 @@ setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:.
 The above commands add the current working directory (whatever that is at the time that you run the executable) to your \verb|$LD_LIBRARY_PATH| environment variable. This will work if you're always running your program from the directory which contains the shared library, but if not you can specify an absolute path in the environment variable,
 \begin{verbatim}
 # bash
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/epp/phrebd/usr/lib/
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/phrebd/usr/lib/
 \end{verbatim}
 
-The alternative is to hard-code a library search path into your executable when you compile it. Here's an example which compiles against a library in \verb|/home/epp/phrebd/lib| and tells the executable to keep looking there for the library, regardless of the content of \verb|$LD_LIBRARY_PATH|.
+The alternative is to hard-code a library search path into your executable when you compile it. Here's an example which compiles against a library in \verb|/home/phrebd/lib| and tells the executable to keep looking there for the library, regardless of the content of \verb|$LD_LIBRARY_PATH|.
 \begin{verbatim}
-g++ -o myprogram myprogram.cpp -L/home/epp/phrebd/lib \
- -Wl,-rpath=/home/epp/phrebd/lib -lFoo
+g++ -o myprogram myprogram.cpp -L/home/phrebd/lib \
+ -Wl,-rpath=/home/phrebd/lib -lFoo
 \end{verbatim}
 
 The \verb|-Wl,-rpath=| part consists of two bits. First, the \verb|-Wl| tells the compiler that the thing following the comma is an argument which should be passed to the linker. Second, the \verb|-rpath=| part is a linker flag which tells it to embed a hard-coded library search path into the resulting executable.

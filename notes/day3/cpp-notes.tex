@@ -72,11 +72,11 @@ Second Edition}
 I said the following in the notes for day 1:
 
 \begin{quote}
-In C++, there is no (practical) limit on the length of variable names. While you should keep names simple to avoid typos, this allows you to make variables more descriptive than \texttt{int i} or \texttt{double p}. You could, for instance, use \texttt{int event\_count} or \texttt{double proton\_momentum}. Avoid \texttt{UPPERCASE\_NAMES} since these are typically used for preprocessor macros (which should be avoided at all costs). Names beginning with an underscore should not be used since the C++ standard library and compiler implementations might use variables with this naming convention internally. See also table \ref{keywords} for a list of language keywords, which cannot be used as names.
+In C++, there is no (practical) limit on the length of variable names. While you should keep names simple to avoid typos, this allows you to make variables more descriptive than \texttt{int i} or \texttt{double p}. You could, for instance, use \texttt{int event\_count} or \texttt{double proton\_momentum}. You should avoid \texttt{UPPERCASE\_NAMES} since these are typically used for preprocessor macros (which should be avoided at all costs). Names beginning with an underscore should not be used since the C++ standard library and compiler implementations might use variables with this naming convention internally. See also table \ref{keywords} for a list of language keywords, which cannot be used as names.
 \end{quote}
 
 \begin{quote}
-The same rules apply to function and class names, but usually a local coding style will exist to define a \emph{convention} for naming such things. Typically this involves e.g. naming all classes with uppercase letters at the beginning of each word, such as \texttt{LorentzVector} or \texttt{LinearDifferentialEquation}, while functions will either be \texttt{some\_function\_name()} or \texttt{someFunctionName()}. Naming conventions vary, but the important thing is to pick one and stick with it.
+The same rules apply to function and class names, but usually a local coding style will exist to define a \emph{convention} for naming such things. Typically this involves e.g. naming all classes with uppercase letters at the beginning of each word, such as \texttt{LorentzVector} or \texttt{LinearDifferentialEquation}, while function names will look something like \texttt{some\_function\_name()} or \texttt{someFunctionName()}. Naming conventions vary, but the important thing is to pick one and stick with it.
 \end{quote}
 
 \begin{table}[htb]
@@ -359,7 +359,8 @@ This time, the compiler gives us an error message:
 \begin{verbatim}
 loki$ g++ -o trial trial.cc
 trial.cc: In function `int main()':
-trial.cc:25: error: conversion from `double' to non-scalar type `Foo' requested
+trial.cc:25: error: conversion from `double' to
+             non-scalar type `Foo' requested
 \end{verbatim}
 
 And finally, the same code but making use of the explicit constructor to force the type conversion to occur:
