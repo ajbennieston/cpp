@@ -35,6 +35,7 @@ def test_file(filename, cxx, cxxflags):
     ignore_unused_parameters = False
     ignore_unused_privates = False
     ignore_uninitialized_variables = False
+    ignore_shadowed_variables = False
     std_input = None
     cmd_args = None
 
@@ -61,6 +62,8 @@ def test_file(filename, cxx, cxxflags):
             ignore_unused_privates = True
         elif 'ignore uninitialized variables: y' in ll:
             ignore_uninitialized_variables = True
+        elif 'ignore shadowed variables: y' in ll:
+            ignore_shadowed_variables = True
         elif 'input' in ll:
             parts = line.split(':')
             std_input = parts[1]
@@ -82,6 +85,8 @@ def test_file(filename, cxx, cxxflags):
             command += ' -Wno-unused-private-field'
         if ignore_uninitialized_variables:
             command += ' -Wno-uninitialized'
+        if ignore_shadowed_variables:
+            command += ' -Wno-shadow'
         print command
         ret = os.system(command)
         if compile_should_succeed and ret != 0:

@@ -5,6 +5,7 @@
  * Compile Should Succeed: Y
  * Run Should Succeed: Y
  * Ignore Unused Private Variables: Y
+ * Ignore Shadowed Variables: Y
  */
 
 // NOTES: BEGIN INCLUSION
