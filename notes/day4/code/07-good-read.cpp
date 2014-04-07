@@ -32,11 +32,8 @@ int main(int argc, char** argv)
 
     // Read lines into a string and print them, one by one
     std::string line;
-    while (true)
+    while (std::getline(in, line))
     {
-        std::getline(in, line);
-        if (! in)
-            break;
         std::cout << "+ " << line << "\n";
     }
 
