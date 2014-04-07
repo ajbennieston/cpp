@@ -3,13 +3,10 @@ all: cpp-notes.pdf
 .PHONY : all clean code
 
 cpp-notes.pdf: cpp-notes.tex code
-	pdflatex cpp-notes
-	pdflatex cpp-notes
-	pdflatex cpp-notes
+	latexmk -bibtex -pdf cpp-notes
 
 clean:
-	rm -f *.aux *.log *.out *.bbl
-	rm -f *.blg *.toc cpp-notes.pdf
+	latexmk -C
 	$(MAKE) -C code clean
 
 code:

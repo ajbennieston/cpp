@@ -3,23 +3,13 @@ all: cpp-notes.pdf
 .PHONY: all clean code
 
 cpp-notes.pdf: cpp-notes.tex bibliography.bib code
-	pdflatex cpp-notes
-	pdflatex cpp-notes
-	bibtex cpp-notes
-	pdflatex cpp-notes
-	pdflatex cpp-notes
+	latexmk -bibtex -pdf cpp-notes
 
 code:
 	$(MAKE) -C code PROCESS_CODE=../../process-code.py
 
 clean:
-	rm -f *.aux
-	rm -f *.log
-	rm -f *.out
-	rm -f *.blg
-	rm -f *.bbl
-	rm -f *.toc
-	rm -f cpp-notes.pdf
+	latexmk -C
 	$(MAKE) -C code clean
 
 read: cpp-notes.pdf
