@@ -6,7 +6,7 @@ import sys
 
 cxx = 'clang++'
 cxxflags = '-std=c++98 -pedantic -Wall -Wextra -Werror'
-cxxflags += ' -Woverloaded-virtual -Wfatal-errors -Wwrite-strings'
+cxxflags += ' -Woverloaded-virtual -Wfatal-errors -Wwrite-strings -Wshadow'
 cxxflags += ' -fstrict-aliasing -fno-gnu-keywords'
 
 def write_texfile(filename):
@@ -34,6 +34,7 @@ def test_file(filename, cxx, cxxflags):
     ignore_unused_variables = False
     ignore_unused_parameters = False
     ignore_unused_privates = False
+    ignore_uninitialized_variables = False
     std_input = None
     cmd_args = None
 
@@ -58,6 +59,8 @@ def test_file(filename, cxx, cxxflags):
             ignore_unused_parameters = True
         elif 'ignore unused private variables: y' in ll:
             ignore_unused_privates = True
+        elif 'ignore uninitialized variables: y' in ll:
+            ignore_uninitialized_variables = True
         elif 'input' in ll:
             parts = line.split(':')
             std_input = parts[1]
@@ -77,6 +80,8 @@ def test_file(filename, cxx, cxxflags):
             command += ' -Wno-unused-parameter'
         if ignore_unused_privates:
             command += ' -Wno-unused-private-field'
+        if ignore_uninitialized_variables:
+            command += ' -Wno-uninitialized'
         print command
         ret = os.system(command)
         if compile_should_succeed and ret != 0:
