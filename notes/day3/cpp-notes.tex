@@ -421,6 +421,8 @@ In order to allow this, C++ has the notion of \emph{friends}. If, within your cl
 
 \emph{Note that friendship is a one-way relationship. Just because I am your friend doesn't mean you are my friend. In other words, if you declare a class as a friend, you allow it access to your private members, but the inverse relationship does not hold---unless that class declares you as a friend too!}
 
+It is possible to \emph{define} a friend function inside the class, but it is more common to simply \emph{declare} it within the class, and provide a definition outside of the class definition. Defining the function outside of the class definition avoids an issue where the function will not be seen outside of the class scope, unless one of its arguments is of that class type (in which case argument-dependent lookup will search the class scope). Of course, since most friend functions accept an argument of the type of which they are a friend, this issue rarely causes problems.
+
 \section{Streaming operators}\label{sec:streaming-operators}
 When I introduced operators, I also introduced the streaming operators. These are rather unusual looking things:
 
