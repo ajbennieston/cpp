@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 cxx = 'clang++'
-cxxflags = '-std=c++98 -pedantic -Wall -Wextra -Werror'
+cxxflags = '-std=c++11 -pedantic -Wall -Wextra -Werror'
 cxxflags += ' -Woverloaded-virtual -Wfatal-errors -Wwrite-strings -Wshadow'
 cxxflags += ' -fstrict-aliasing -fno-gnu-keywords'
 

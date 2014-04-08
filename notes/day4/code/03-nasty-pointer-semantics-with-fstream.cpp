@@ -13,7 +13,7 @@ int main()
 {
     bool someCondition = true;
     // NOTES: BEGIN INCLUSION
-    std::ofstream* log = 0;
+    std::ofstream* log = nullptr;
     
     if(someCondition)
         log = new std::ofstream("log1.out");

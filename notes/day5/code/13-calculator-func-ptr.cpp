@@ -24,7 +24,7 @@ int main()
 
     // function pointer to choose current operation
     // initialised to a null pointer
-    double (*current_op)(double, double) = 0;
+    double (*current_op)(double, double) = nullptr;
 
     while (true)
     {
@@ -54,7 +54,7 @@ int main()
             default:
                 // No sensible choice, reset
                 // to null pointer
-                current_op = 0;
+                current_op = nullptr;
                 break;
         }
 

@@ -58,7 +58,7 @@ int main()
     std::cin >> metric_choice;
 
     // Initialise a function pointer to null...
-    VecFnPtr length_fn = 0;
+    VecFnPtr length_fn = nullptr;
     if (metric_choice == 1)
     {
         length_fn = &Vector::manhattanLength;

@@ -11,7 +11,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    double* my_ptr = 0;
+    double* my_ptr = nullptr;
 
     // some other code which may or
     // may not set my_ptr goes here
