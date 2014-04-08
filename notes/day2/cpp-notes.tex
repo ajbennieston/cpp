@@ -106,9 +106,11 @@ To eliminate problems with pointers to arbitrary addresses, you should \textbf{a
 
 \input{code/07-ptr-initialisation}
 
-If you don't have the object yet, initialise the pointer to 0. You should always check that a pointer is not equal to 0 (a so-called \emph{null pointer}) before using it:
+If you don't have the object yet, initialise the pointer to \verb|nullptr|. You should always check that a pointer is not equal to \verb|nullptr| (a so-called \emph{null pointer}) before using it.
 
 \input{code/08-init-ptr-to-zero}
+
+Prior to the C++11 standard, \verb|nullptr| did not exist, and pointers were initialised using the integer \verb|0| instead. In the more distant past, the C macro \verb|NULL| was used to initialise null pointers. When writing new code, use \verb|nullptr| if C++11 is available, or \verb|0| otherwise; avoid using \verb|NULL|.
 
 Finally, if you're allocating memory for an object or array using \texttt{new}, you should initialise the pointer directly with the result of \texttt{new}:
 
