@@ -62,10 +62,12 @@ It is possible to fill entire books with information about C++ I/O streams.\foot
 In order to use the standard file streams, you will need to include the header \verb|<fstream>|.
 
 \subsubsection{Opening files}
-There are two ``basic'' ways to open a file. The first is to construct an \verb|std::ifstream| or \verb|std::ofstream| object (depending on whether you want to read from the file, or write to it) with a filename (as a \verb|const char*|):
+There are two ``basic'' ways to open a file. The first is to construct an \verb|std::ifstream| or \verb|std::ofstream| object (depending on whether you want to read from the file, or write to it) with a filename:
 \input{code/01-open-file-from-ctor}
 
-The second way is to default-construct an \verb|std::ifstream| or \verb|std::ofstream| object, then call the \verb|open()| member function:
+Before the C++11 standard, the file stream constructors did not accept \verb|std::string| arguments for the filename. Instead, they allowed only \verb|const char*| arguments (C-strings). If you're working in an environment without C++11 support, you can use the \verb|c_str()| member function of a \verb|std::string| object to obtain a C-string for this purpose.
+
+The second way to open a file is to default-construct an \verb|std::ifstream| (for input) or \verb|std::ofstream| (for output) object, then call the \verb|open()| member function:
 \input{code/02-open-file-after-ctor}
 
 Note that this approach allows you to create the file in the current scope while opening it with a name which is determined in some inner scope. This is potentially useful if you want to call a file something different, based on some logic within the program. The alternative would be to do something like:

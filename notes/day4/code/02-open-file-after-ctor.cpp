@@ -8,13 +8,14 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 int main()
 {
     bool someCondition = true;
     // NOTES: BEGIN INCLUSION
     std::ofstream log;
-    const char* filename = 0;
+    std::string filename;
 
     if (someCondition)
         filename = "log1.out";

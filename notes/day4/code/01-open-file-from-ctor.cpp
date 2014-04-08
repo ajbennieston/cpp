@@ -8,11 +8,12 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    const char* filename = "myFile.dat";
+    std::string filename = "myFile.dat";
     std::ifstream inputFile(filename);
     // NOTES: END INCLUSION
     int tmp;
