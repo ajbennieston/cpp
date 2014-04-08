@@ -369,6 +369,17 @@ And finally, the same code but making use of the explicit constructor to force t
 
 Generally speaking you should be careful when defining constructors which have a single argument. If you want to allow the compiler to convert from the argument type to the type your constructor is for, then everything is fine. If you'd rather decide for yourself when you want type conversions, and want to stop the compiler guessing when you meant to convert, and when you just made a mistake, you should label your single-argument constructors as \texttt{explicit}.
 
+\section{Resource management and RAII}
+A resource is anything that must be explicitly \emph{aquired} and \emph{released}. By far the most common resource in C++ programs is dynamically allocated memory, which is acquired using \verb|new| and released using \verb|delete| (or, equally, the array forms \verb|new[]| and \verb|delete[]|). The memory is accessed through a resource handle (the pointer returned by \verb|new|) and this handle is also used to free the memory (it is the object you pass to \verb|delete|). Other resources might be files on disk, database connections, or network sockets, to name just a few.
+
+When you acquire a resource, it becomes your responsibility to release it when you are done with it. This is easy to forget; memory leaks, caused by allocating memory via \verb|new|, but never freeing it with \verb|delete|, are extremely common. Worse still, if there are multiple paths of execution through your code, you may remember to delete your memory in the common case, but forget in the event of an error or an exception.
+
+An established approach to preventing resource leaks is to use an idiom known as RAII (Resource Acquisition Is Initialisation). It is also increasingly being referred to as Scope-Based Resource Management (SBRM), which more accurately reflects the concept.
+
+The idea is that you acquire resources during the initialisation of your object (in the constructor), and release them during the cleanup phase (in the destructor). Your class then acts as a wrapper for the handle to that resource, controlling all access to it. Instances of the class each \emph{own} some resource, and will release it when they go out of scope. It is common for these objects to be created as automatic variables (i.e. local variables within a function or block of code), so that the resource they own is released when that function or code block ends.
+
+You will see many examples of the RAII idiom in modern C++ software. Smart pointers, which are discussed in day 4, are ideal examples of RAII in use; memory is allocated in the constructor, and the destructor calls \verb|delete| to free it. Consistent use of RAII wrappers (classes that hold a resource, and tie its lifetime to their own) leads to code that suffers fewer resource leaks compared to manually keeping track of each resource, or each memory allocation, and freeing them on every possible exit path from your code.
+
 \section{Operator overloading and exercise 6}
 Operator overloading can be confusing at first. The trick is to identify whether you are dealing with a unary or binary operator (whether it takes one argument or two), and whether you want to write it as a member function, a non-member friend function, or a non-member non-friend function. See section \ref{sec:friend} for a discussion of friend classes and member functions.
 
