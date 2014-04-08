@@ -408,6 +408,12 @@ If the types of the LHS and RHS differ, you can write two versions of the free o
 
 Obviously it only makes sense to do this for commutative operations such as multiplication by a scalar...
 
+There is an alternative way to write operators such as \verb|operator+| and \verb|operator*|, which makes use of the fact that if you pass an argument by value, a copy is made. This eliminates the need for the creation of a temporary variable to hold the result:
+
+\input{code/361-operator-using-value}
+
+When this function is called (i.e. when the operator is applied) the left-hand operand will be copied, and appear as the \verb|Foo lhs|, while the right-hand operand will be passed into the function by (const) reference, i.e. \verb|const Foo& rhs|. Since \verb|lhs| is already a copy, we don't need to create another, and can use \verb|+=| directly on it. This amounts to a different way of writing the same function; we have to make a copy in both cases, if we want to implement \verb|operator+| in terms of \verb|operator+=|.
+
 \section{Friends}\label{sec:friend}
 It is sometimes necessary (or desirable) to allow free (non-member) functions and other classes to have access to the private members (both variables and functions) of a given class. See section \ref{sec:streaming-operators} on streaming operators for one possible use of this.
 
