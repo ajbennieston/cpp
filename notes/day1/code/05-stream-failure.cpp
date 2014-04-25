@@ -12,7 +12,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int i(0);
+    int i{0};
     std::cin >> i;
     if (std::cin.fail())
     {

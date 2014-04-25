@@ -12,7 +12,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int i(0);
+    int i{0};
     std::cout << "Enter starting point: ";
     std::cin >> i;
     for ( /* use existing value of i */ ; i < 10 ; ++i )

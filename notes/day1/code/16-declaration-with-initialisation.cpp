@@ -10,7 +10,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int a(0);
+    int a{0};
     // NOTES: END INCLUSION
     return 0;
 }

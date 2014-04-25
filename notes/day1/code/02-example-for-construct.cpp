@@ -19,7 +19,7 @@
 
 int main()
 {
-    int x = 0;
+    int x{0};
     // NOTES: BEGIN INCLUSION
     for ( initialiser ; condition ; loop_process )
     // NOTES: END INCLUSION

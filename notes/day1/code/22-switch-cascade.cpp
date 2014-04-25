@@ -18,7 +18,7 @@ void do_division() {}
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    char option('\0');
+    char option{'\0'};
     std::cin >> option;
 
     switch (option)

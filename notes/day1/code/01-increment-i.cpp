@@ -8,7 +8,7 @@
 
 int main()
 {
-    int i = 0;
+    int i{0};
     // NOTES: BEGIN INCLUSION
     ++i; // Add one to i
     // NOTES: END INCLUSION

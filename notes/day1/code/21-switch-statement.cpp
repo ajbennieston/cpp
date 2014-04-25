@@ -12,7 +12,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    int month(0);
+    int month{0};
     std::cin >> month;
 
     switch (month)

@@ -11,7 +11,7 @@ int main()
 {
     // NOTES: BEGIN INCLUSION
     double c = 3e8;
-    double h(6.63e-34);
+    double h{6.63e-34};
     // NOTES: END INCLUSION
     return 0;
 }

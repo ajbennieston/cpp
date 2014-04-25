@@ -12,10 +12,10 @@
 
 int main()
 {
-    int i(0);
+    int i{0};
     std::cin >> i;
     // NOTES: BEGIN INCLUSION
-    if(std::cin.fail())
+    if (std::cin.fail())
     {
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');

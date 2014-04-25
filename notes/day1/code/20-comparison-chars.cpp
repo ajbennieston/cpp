@@ -13,7 +13,7 @@
 int main()
 {
     // NOTES: BEGIN INCLUSION
-    char ch(0);
+    char ch{0};
     std::cin >> ch;
     if (ch == 'q')
         exit(0);
