@@ -1,8 +1,13 @@
+SUBPROJECTS := notes
+
 .PHONY: all clean
 
-
 all:
-	$(MAKE) -C notes
+	for subproject in $(SUBPROJECTS) ; do \
+		$(MAKE) -C $$subproject ; \
+	done
 
 clean:
-	$(MAKE) -C notes clean
+	for subproject in $(SUBPROJECTS) ; do \
+		$(MAKE) -C $$subproject clean ; \
+	done
