@@ -1,13 +1,31 @@
-SUBDIRS=day1 day2 day3 day4 day5
+NOTES_SUBPROJECTS := day1 day2 day3 day4 day5
+PROCESS_CODE := ./process-code.py
 
-.PHONY: all clean 
+.PHONY: all clean
 
-all: notes-day1 notes-day2 notes-day3 notes-day4 notes-day5
+all: $(patsubst %,%/cpp-notes.pdf,$(NOTES_SUBPROJECTS))
 
 clean:
-	for subdir in $(SUBDIRS) ; do \
-		$(MAKE) -C $$subdir clean ; \
-		done
+	for subdir in $(NOTES_SUBPROJECTS) ; do \
+		cd $$subdir && latexmk -C && cd - ; \
+	done
+	rm -f $(patsubst %.cpp,%.tex,$(wildcard */code/*.cpp))
+	rm -f $(patsubst %.cpp,%,$(wildcard */code/*.cpp))
 
-notes-day%:
-	$(MAKE) -C $(patsubst notes-%,%,$@)
+%.tex: %.cpp
+	$(PROCESS_CODE) $^
+
+day1/cpp-notes.pdf: day1/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day1/code/*.cpp))
+	cd $(dir $@) && latexmk -bibtex -pdf cpp-notes
+
+day2/cpp-notes.pdf: day2/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day2/code/*.cpp))
+	cd $(dir $@) && latexmk -bibtex -pdf cpp-notes
+
+day3/cpp-notes.pdf: day3/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day3/code/*.cpp))
+	cd $(dir $@) && latexmk -bibtex -pdf cpp-notes
+
+day4/cpp-notes.pdf: day4/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day4/code/*.cpp))
+	cd $(dir $@) && latexmk -bibtex -pdf cpp-notes
+
+day5/cpp-notes.pdf: day5/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day5/code/*.cpp))
+	cd $(dir $@) && latexmk -bibtex -pdf cpp-notes

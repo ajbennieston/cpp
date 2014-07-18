@@ -118,6 +118,12 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print 'Usage: %s filename' % sys.argv[0]
         sys.exit(1)
-    filename = sys.argv[1]
+    directory, filename = os.path.split(sys.argv[1])
+    # Store old working directory
+    old_wd = os.getcwd()
+    # Change into directory holding the file we have been asked to process
+    os.chdir(directory)
     test_file(filename, cxx, cxxflags)
     write_texfile(filename)
+    # Change back to old working directory
+    os.chdir(old_wd)
