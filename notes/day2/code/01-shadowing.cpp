@@ -21,7 +21,7 @@ void divide(double a, double b, double& answer)
 
 int main()
 {
-    double answer(0);
+    double answer{0};
     divide(1, 2, answer);
     return 0;
 }

@@ -18,7 +18,7 @@ bool add(const double& a, const double& b, double& answer)
 
 int main()
 {
-    double x(0);
+    double x{0};
     if(add(1, 2, x) == true)
         return 0;
     else

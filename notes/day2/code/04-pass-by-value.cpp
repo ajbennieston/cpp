@@ -13,9 +13,9 @@ bool multiply_magnitudes(double a, double b, double& answer)
 {
     if (a < 0)
         a = fabs(a);
-    if(b < 0)
+    if (b < 0)
         b = fabs(b);
-    answer = a * b;
+    answer = fabs(a) * fabs(b);
     return true;
 
 }
@@ -23,7 +23,7 @@ bool multiply_magnitudes(double a, double b, double& answer)
 
 int main()
 {
-    double x(0);
+    double x{0};
     if (multiply_magnitudes(3.14, -2, x) != true)
         return 1;
     else

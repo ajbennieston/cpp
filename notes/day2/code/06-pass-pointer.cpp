@@ -20,9 +20,9 @@ double max(const double* array, const int size)
     // otherwise, all elements could be < 0
     // and we would return the incorrect value
     double maximum = array[0];
-    for(int i = 1; i < size; ++i)
+    for (int i = 1; i < size; ++i)
     {
-        if(array[i] > maximum)
+        if (array[i] > maximum)
         {
             maximum = array[i];
         }
