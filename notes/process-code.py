@@ -11,7 +11,7 @@ cxxflags += ' -fstrict-aliasing -fno-gnu-keywords'
 
 def write_texfile(filename):
     with open(filename.replace('cpp', 'tex'), 'w') as texfile:
-        texfile.write('\\begin{lstlisting}\n')
+        texfile.write('\\begin{minted}{c++}\n')
         include = False
         for line in open(filename, 'r'):
             if line.strip().startswith('// NOTES: BEGIN INCLUSION'):
@@ -24,7 +24,7 @@ def write_texfile(filename):
                 texfile.write(line)
             else:
                 continue
-        texfile.write('\\end{lstlisting}\n')
+        texfile.write('\\end{minted}\n')
 
 def test_file(filename, cxx, cxxflags):
     do_compile = False

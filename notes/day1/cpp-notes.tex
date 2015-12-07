@@ -41,7 +41,8 @@
 \newcommand{\hex}{\ensuremath{\,(\mathrm{base}~16)}}
 
 % Make code listings look good
-\usepackage{lstconfig}
+\usepackage{minted}
+\usepackage{upquote}
 
 \title{Computing Course Day 1\\
 Notes \& Discussion\\
@@ -203,7 +204,7 @@ Character literals are represented by a character enclosed in single quotes:
 
 \input{code/14-char-literals}
 
-The use of character literals instead of their integer equivalents makes programs more portable. For instance, while the ASCII value of the character \texttt{'a'} is 97, using \texttt{'a'} to represent the character will work on computers which use a different character set. Note also that you can include \emph{special} characters such as tabs \verb|'\t'|, newlines \verb|'\n'| and the null character \verb|'\0'| (which is used to terminate C-style strings).
+The use of character literals instead of their integer equivalents makes programs more portable. For instance, while the ASCII value of the character \verb|'a'| is 97, using \verb|'a'| to represent the character will work on computers which use a different character set. Note also that you can include \emph{special} characters such as tabs \verb|'\t'|, newlines \verb|'\n'| and the null character \verb|'\0'| (which is used to terminate C-style strings).
 
 \subsection{String Literals}
 A string literal is a character sequence enclosed in double quotes. You've seen these already as values streamed to the \texttt{std::cout} object to print messages to the screen. String literals contain one more character than they appear to, since all C-style strings are terminated with a null character \verb|'\0'|. The \emph{type} of a string literal is \emph{array of the appropriate number of \emph{const} characters}, so \texttt{"Feynman"} has type \texttt{const char[8]}.
