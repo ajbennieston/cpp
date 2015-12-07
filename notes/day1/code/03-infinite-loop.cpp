@@ -9,7 +9,7 @@
 int main() {
   // NOTES: BEGIN INCLUSION
   for (;;)  // forever
-      // NOTES: END INCLUSION
+            // NOTES: END INCLUSION
   {
     break;  // end immediately
   }
