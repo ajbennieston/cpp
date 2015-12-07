@@ -43,6 +43,8 @@
 % Make code listings look good
 \usepackage{minted}
 \usepackage{upquote}
+\usepackage{booktabs}
+\usepackage{tabularx}
 
 \title{Computing Course Day 1\\
 Notes \& Discussion\\
@@ -66,16 +68,16 @@ The C++ language is (mostly) backward-compatible with the C language. As such, t
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|l|}
-\hline
+\begin{tabular}{lll}
+\toprule
 C Header & C++ Header & Description \\
-\hline
+\midrule
 \texttt{stdio.h} & \texttt{cstdio} & C-style I/O functions (\texttt{printf}, \texttt{scanf}, ...) \\
 \texttt{stdlib.h} & \texttt{cstdlib} & C standard library functions \\
 \texttt{math.h} & \texttt{cmath} & Mathematical functions \\
 \texttt{string.h} & \texttt{cstring} & C-style string (\texttt{char*}) manipulation functions \\
 \texttt{limits.h} & \texttt{climits} & Macros defining min/max values of numeric types \\
-\hline
+\bottomrule
 \end{tabular}
 \caption{\label{c-cpp-headers}C headers and their names in C++}
 \end{table}
@@ -121,23 +123,25 @@ You'll notice that the keywords \texttt{and}, \texttt{or} and \texttt{not} are d
 
 \begin{table}[htb]
 \centering
-\begin{tabular}{|l|l|l|l|l|l|}
-\hline
-and & and\_eq & asm & auto & bitand & bitor \\
-bool & break & case & catch & char & class \\
-compl & const & const\_cast & continue & default & delete \\
-do & double & dynamic\_cast & else & enum & explicit \\
-export & extern & false & float & for & friend \\
-goto & if & inline & int & long & mutable \\
-namespace & new & not & not\_eq & operator & or \\
-or\_eq & private & protected & public & register & reinterpret\_cast \\
-return & short & signed & sizeof & static & static\_cast \\
-struct & switch & template & this & throw & true \\
-try & typedef & typeid & typename & union & unsigned \\
-using & virtual & void & volatile & wchar\_t & while \\
-xor & xor\_eq & & & & \\
-\hline
-\end{tabular}
+\begin{tabularx}{\textwidth}{XXXXX}
+\toprule
+and & and\_eq & asm & auto & bitand \\
+bitor & bool & break & case & catch \\
+char & class & compl & const & const\_cast \\
+continue & default & delete & do & double \\
+dynamic\_cast & else & enum & explicit & export \\
+extern & false & float & for & friend \\
+goto & if & inline & int & long \\
+mutable & namespace & new & not & not\_eq \\
+operator & or & or\_eq & private & protected \\
+public & register & reinterpret\_cast & return & short \\
+signed & sizeof & static & static\_cast & struct \\
+switch & template & this & throw & true \\
+try & typedef & typeid & typename & union \\
+unsigned & using & virtual & void & volatile \\
+wchar\_t & while & xor & xor\_eq & \\
+\bottomrule
+\end{tabularx}
 \caption{\label{keywords}C++ Keywords}
 \end{table}
 
