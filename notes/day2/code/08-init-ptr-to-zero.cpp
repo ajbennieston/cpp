@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,19 +8,16 @@
 
 #include <iostream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    double* my_ptr = nullptr;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  double* my_ptr = nullptr;
 
-    // some other code which may or
-    // may not set my_ptr goes here
+  // some other code which may or
+  // may not set my_ptr goes here
 
-    if (my_ptr)
-    {
-        std::cout << *my_ptr << "\n";
-    }
-    // NOTES: END INCLUSION
-    return 0;
+  if (my_ptr) {
+    std::cout << *my_ptr << "\n";
+  }
+  // NOTES: END INCLUSION
+  return 0;
 }
-

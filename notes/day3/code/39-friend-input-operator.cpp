@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Compile Should Succeed: Y
@@ -11,26 +11,25 @@
 
 // NOTES: BEGIN INCLUSION
 class FourVector {
-    public:
-        /* ... */
-        friend std::istream& operator>>(std::istream&, FourVector&);
-    private:
-        double t; 
-        double x;
-        double y; 
-        double z;
+ public:
+  /* ... */
+  friend std::istream& operator>>(std::istream&, FourVector&);
+
+ private:
+  double t;
+  double x;
+  double y;
+  double z;
 };
 
-std::istream& operator>>(std::istream& stream, FourVector& vec)
-{
-    stream >> vec.t >> vec.x >> vec.y >> vec.z;
-    return stream;
+std::istream& operator>>(std::istream& stream, FourVector& vec) {
+  stream >> vec.t >> vec.x >> vec.y >> vec.z;
+  return stream;
 }
 // NOTES: END INCLUSION
 
-int main()
-{
-    FourVector v;
-    std::cin >> v;
-    return 0;
+int main() {
+  FourVector v;
+  std::cin >> v;
+  return 0;
 }

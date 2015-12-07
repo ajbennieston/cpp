@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -9,16 +9,14 @@
 
 #include <iostream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    int i{0};
-    std::cout << "Enter starting point: ";
-    std::cin >> i;
-    for ( /* use existing value of i */ ; i < 10 ; ++i )
-    {
-        std::cout << i << "\n";
-    }
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  int i{0};
+  std::cout << "Enter starting point: ";
+  std::cin >> i;
+  for (/* use existing value of i */; i < 10; ++i) {
+    std::cout << i << "\n";
+  }
+  // NOTES: END INCLUSION
+  return 0;
 }

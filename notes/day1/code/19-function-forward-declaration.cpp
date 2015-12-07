@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -9,16 +9,15 @@
 // NOTES: BEGIN INCLUSION
 #include <iostream>
 
-void print_help(); // declaration
+void print_help();  // declaration
 
-int main()
-{
-    print_help();
-    return 0;
+int main() {
+  print_help();
+  return 0;
 }
 
-void print_help() // definition
+void print_help()  // definition
 {
-    std::cout << "HELP!\n";
+  std::cout << "HELP!\n";
 }
 // NOTES: END INCLUSION

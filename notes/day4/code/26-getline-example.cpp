@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,12 +10,11 @@
 #include <iostream>
 #include <string>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::string myline;
-    std::ifstream file("myFile.dat");
-    std::getline(file, myline);
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::string myline;
+  std::ifstream file("myFile.dat");
+  std::getline(file, myline);
+  // NOTES: END INCLUSION
+  return 0;
 }

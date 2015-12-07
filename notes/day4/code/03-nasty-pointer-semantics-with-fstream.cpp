@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -9,21 +9,19 @@
 #include <fstream>
 #include <iostream>
 
-int main()
-{
-    bool someCondition = true;
-    // NOTES: BEGIN INCLUSION
-    std::ofstream* log = nullptr;
-    
-    if(someCondition)
-        log = new std::ofstream("log1.out");
-    else
-        log = new std::ofstream("log2.out");
+int main() {
+  bool someCondition = true;
+  // NOTES: BEGIN INCLUSION
+  std::ofstream* log = nullptr;
 
-    *log << "Test\n";
+  if (someCondition)
+    log = new std::ofstream("log1.out");
+  else
+    log = new std::ofstream("log2.out");
 
-    delete log; // remember to free the memory!
-    // NOTES: END INCLUSION
-    return 0;
+  *log << "Test\n";
+
+  delete log;  // remember to free the memory!
+  // NOTES: END INCLUSION
+  return 0;
 }
-

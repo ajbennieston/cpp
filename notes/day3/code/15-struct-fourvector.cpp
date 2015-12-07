@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,17 +8,14 @@
 
 // NOTES: BEGIN INCLUSION
 struct FourVector {
-    double t;
-    double x;
-    double y;
-    double z;
+  double t;
+  double x;
+  double y;
+  double z;
 };
 
 double interval(const FourVector& vec);
 FourVector boost_z(const FourVector& vec, const double velocity);
 // NOTES: END INCLUSION
 
-int main()
-{
-    return 0;
-}
+int main() { return 0; }

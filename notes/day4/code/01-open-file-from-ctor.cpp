@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,15 +10,13 @@
 #include <iostream>
 #include <string>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::string filename = "myFile.dat";
-    std::ifstream inputFile(filename);
-    // NOTES: END INCLUSION
-    int tmp;
-    inputFile >> tmp;
-    std::cout << tmp << "\n";
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::string filename = "myFile.dat";
+  std::ifstream inputFile(filename);
+  // NOTES: END INCLUSION
+  int tmp;
+  inputFile >> tmp;
+  std::cout << tmp << "\n";
+  return 0;
 }
-

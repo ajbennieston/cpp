@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,13 +10,11 @@
 #include <iterator>
 #include <vector>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::vector<int> v;
-    std::copy(std::istream_iterator<int>(std::cin),
-              std::istream_iterator<int>(),
-              std::back_inserter(v));
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::vector<int> v;
+  std::copy(std::istream_iterator<int>(std::cin), std::istream_iterator<int>(),
+            std::back_inserter(v));
+  // NOTES: END INCLUSION
+  return 0;
 }

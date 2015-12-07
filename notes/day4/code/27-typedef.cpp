@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -9,12 +9,11 @@
 #include <iostream>
 #include <string>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    typedef std::string str;
-    str a = "Hello";
-    // NOTES: END INCLUSION
-    std::cout << a << "\n";
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  typedef std::string str;
+  str a = "Hello";
+  // NOTES: END INCLUSION
+  std::cout << a << "\n";
+  return 0;
 }

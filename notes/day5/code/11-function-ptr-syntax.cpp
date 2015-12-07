@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: N
  * Run: N
@@ -8,4 +8,4 @@
 
 // NOTES: BEGIN INCLUSION
 return_type (*)(argument_typelist)
-// NOTES: END INCLUSION
+    // NOTES: END INCLUSION

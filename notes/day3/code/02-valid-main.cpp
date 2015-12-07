@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: N
@@ -7,7 +7,8 @@
  */
 
 // NOTES: BEGIN INCLUSION
-int main() { /* ... */ }
-int main(int argc, char* argv[]) { /* ... */ }
+int main() {/* ... */
+}
+int main(int argc, char* argv[]) {/* ... */
+}
 // NOTES: END INCLUSION
-

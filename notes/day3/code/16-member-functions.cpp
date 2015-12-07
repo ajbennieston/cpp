@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,16 +8,14 @@
 
 // NOTES: BEGIN INCLUSION
 class Foo {
-    public:
-        Foo() : x(4) {}
-        int squareMe() { return x*x; }
-        int getSquaredValue() { return this->x * this->x; }
-    private:
-        int x;
+ public:
+  Foo() : x(4) {}
+  int squareMe() { return x * x; }
+  int getSquaredValue() { return this->x * this->x; }
+
+ private:
+  int x;
 };
 // NOTES: END INCLUSION
 
-int main()
-{
-    return 0;
-}
+int main() { return 0; }

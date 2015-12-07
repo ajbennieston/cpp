@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -7,12 +7,10 @@
  * Ignore Unused Variables: Y
  */
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    double h = 6.63e-34;
-    double* hptr = &h;
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  double h = 6.63e-34;
+  double* hptr = &h;
+  // NOTES: END INCLUSION
+  return 0;
 }
-

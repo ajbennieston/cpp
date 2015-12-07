@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,18 +10,17 @@
 #include <iostream>
 
 class A {
-    public:
-        double square(double x) { return x*x; }
+ public:
+  double square(double x) { return x * x; }
 };
 
-int main()
-{
-    double (A::*func_ptr)(double) = &A::square;
+int main() {
+  double (A::*func_ptr)(double) = &A::square;
 
-    A my_a;
-    double result = (my_a.*func_ptr)(3.14);
+  A my_a;
+  double result = (my_a.*func_ptr)(3.14);
 
-    std::cout << result << "\n";
-    return 0;
+  std::cout << result << "\n";
+  return 0;
 }
 // NOTES: END INCLUSION

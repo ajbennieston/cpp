@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -7,11 +7,9 @@
  * Ignore Unused Variables: Y
  */
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    char word[] = "Hello";
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  char word[] = "Hello";
+  // NOTES: END INCLUSION
+  return 0;
 }
-

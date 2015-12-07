@@ -14,6 +14,7 @@ clean:
 	rm -f $(patsubst %.cpp,%,$(wildcard */code/*.cpp))
 
 %.tex: %.cpp
+	clang-format -i --style=Google $^
 	$(PROCESS_CODE) $^
 
 day1/cpp-notes.pdf: day1/cpp-notes.tex $(patsubst %.cpp,%.tex,$(wildcard day1/code/*.cpp))

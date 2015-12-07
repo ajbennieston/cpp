@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,13 +8,11 @@
 
 #include <fstream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::ofstream log("log.out");
-    log << "Hello, log world!\n";
-    log.close();
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::ofstream log("log.out");
+  log << "Hello, log world!\n";
+  log.close();
+  // NOTES: END INCLUSION
+  return 0;
 }
-

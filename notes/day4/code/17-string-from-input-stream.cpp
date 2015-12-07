@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: N
@@ -9,11 +9,10 @@
 #include <iterator>
 #include <string>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::string bob((std::istream_iterator<char>(std::cin)),
-            std::istream_iterator<char>());
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::string bob((std::istream_iterator<char>(std::cin)),
+                  std::istream_iterator<char>());
+  // NOTES: END INCLUSION
+  return 0;
 }

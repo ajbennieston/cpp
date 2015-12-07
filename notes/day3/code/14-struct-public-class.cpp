@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,20 +8,17 @@
 
 // NOTES: BEGIN INCLUSION
 struct Point1 {
-    double x;
-    double y;
+  double x;
+  double y;
 };
 
 // is identical to
 
 class Point2 {
-    public:
-        double x;
-        double y;
+ public:
+  double x;
+  double y;
 };
 // NOTES: END INCLUSION
 
-int main()
-{
-    return 0;
-}
+int main() { return 0; }

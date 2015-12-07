@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,11 +10,10 @@
 #include "Foo.hpp"
 #include <iostream>
 
-int main()
-{
-    Foo::Foo* f = Foo::makeFoo(42);
-    std::cout << f->x << "\n";
-    delete f;
-    return 0;
+int main() {
+  Foo::Foo* f = Foo::makeFoo(42);
+  std::cout << f->x << "\n";
+  delete f;
+  return 0;
 }
 // NOTES: END INCLUSION

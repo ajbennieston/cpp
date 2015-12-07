@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -6,13 +6,12 @@
  * Run Should Succeed: Y
  */
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    for ( ; ; ) // forever
-    // NOTES: END INCLUSION
-    {
-        break; // end immediately
-    }
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  for (;;)  // forever
+      // NOTES: END INCLUSION
+  {
+    break;  // end immediately
+  }
+  return 0;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -10,10 +10,9 @@
 #include <iostream>
 #include <limits>
 
-int main()
-{
-    std::cout << std::numeric_limits<float>::epsilon() << std::endl;
-    std::cout << std::numeric_limits<double>::epsilon() << std::endl;
-    return 0;
+int main() {
+  std::cout << std::numeric_limits<float>::epsilon() << std::endl;
+  std::cout << std::numeric_limits<double>::epsilon() << std::endl;
+  return 0;
 }
 // NOTES: END INCLUSION

@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,11 +8,10 @@
 
 #include <iostream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    double c = 3e8;
-    std::cout << c << "\n";
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  double c = 3e8;
+  std::cout << c << "\n";
+  // NOTES: END INCLUSION
+  return 0;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -7,12 +7,10 @@
  * Ignore Unused Variables: Y
  */
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    int* x = new int;
-    // NOTES: END INCLUSION
-    delete x;
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  int* x = new int;
+  // NOTES: END INCLUSION
+  delete x;
+  return 0;
 }
-

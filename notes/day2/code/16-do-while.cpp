@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -8,16 +8,13 @@
 
 #include <iostream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    int x = 10;
-    do {
-        std::cout << x
-            << " green bottles, hanging on the wall...\n";
-        --x;
-    } while (x > 0);
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  int x = 10;
+  do {
+    std::cout << x << " green bottles, hanging on the wall...\n";
+    --x;
+  } while (x > 0);
+  // NOTES: END INCLUSION
+  return 0;
 }
-

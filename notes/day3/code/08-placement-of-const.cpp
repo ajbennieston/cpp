@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: N
@@ -7,11 +7,10 @@
  * Ignore Unused Variables: Y
  */
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    const double t1;
-    double const t2;
-    // NOTES: END INCLUSION
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  const double t1;
+  double const t2;
+  // NOTES: END INCLUSION
+  return 0;
 }

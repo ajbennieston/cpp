@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: N
  * Run: N
@@ -8,5 +8,4 @@
 
 // NOTES: BEGIN INCLUSION
 typename T::value_type& element
-// NOTES: END INCLUSION
-
+    // NOTES: END INCLUSION

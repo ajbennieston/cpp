@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -9,15 +9,14 @@
 
 #include <iostream>
 
-int main()
-{
-    // NOTES: BEGIN INCLUSION
-    std::cout << "How many numbers do you have?" << "\n";
-    int size(0);
-    std::cin >> size;
-    int* x = new int[size];
-    // NOTES: END INCLUSION
-    delete x;
-    return 0;
+int main() {
+  // NOTES: BEGIN INCLUSION
+  std::cout << "How many numbers do you have?"
+            << "\n";
+  int size(0);
+  std::cin >> size;
+  int* x = new int[size];
+  // NOTES: END INCLUSION
+  delete x;
+  return 0;
 }
-

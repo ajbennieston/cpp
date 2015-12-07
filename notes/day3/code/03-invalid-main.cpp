@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: N
@@ -7,6 +7,6 @@
  */
 
 // NOTES: BEGIN INCLUSION
-void main() { /* ... */ } // WRONG!
+void main() {/* ... */
+}  // WRONG!
 // NOTES: END INCLUSION
-

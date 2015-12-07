@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: Y
  * Run: Y
@@ -17,14 +17,13 @@
 #define condition x < 10
 #define loop_process ++x
 
-int main()
-{
-    int x{0};
-    // NOTES: BEGIN INCLUSION
-    for ( initialiser ; condition ; loop_process )
-    // NOTES: END INCLUSION
-    {
-        std::cout << x << "\n";
-    }
-    return 0;
+int main() {
+  int x{0};
+  // NOTES: BEGIN INCLUSION
+  for (initialiser; condition; loop_process)
+      // NOTES: END INCLUSION
+  {
+    std::cout << x << "\n";
+  }
+  return 0;
 }

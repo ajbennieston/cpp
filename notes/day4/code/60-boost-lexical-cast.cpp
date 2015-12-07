@@ -1,4 +1,4 @@
-/* 
+/*
  * C++ Notes Accompanying Code
  * Compile: N
  * Run: N
@@ -10,4 +10,3 @@
 std::string str = "0.707";
 double x = boost::lexical_cast<double>(str);
 // NOTES: END INCLUSION
-
