@@ -19,7 +19,7 @@ int main() {
   // NOTES: BEGIN INCLUSION
   for (std::vector<int>::iterator iter = naturals.begin(), end = naturals.end();
        iter != end; ++iter)
-      // NOTES: END INCLUSION
+  // NOTES: END INCLUSION
   {
     // loop body; here just output each element
     std::cout << *iter << "\n";

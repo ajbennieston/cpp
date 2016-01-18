@@ -19,7 +19,7 @@ T& operator+=(T& v, const typename T::value_type& element) {
 }
 
 template <typename T>
-T& operator, (T& v, const typename T::value_type& element) {
+T& operator, (T & v, const typename T::value_type& element) {
   v.push_back(element);
   return v;
 }

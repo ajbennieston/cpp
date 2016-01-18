@@ -16,7 +16,7 @@ std::vector<int>& operator+=(std::vector<int>& v, int element) {
   return v;
 }
 
-std::vector<int>& operator, (std::vector<int>& v, int element) {
+std::vector<int>& operator, (std::vector<int> & v, int element) {
   v.push_back(element);
   return v;
 }

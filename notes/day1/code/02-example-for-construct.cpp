@@ -21,7 +21,7 @@ int main() {
   int x{0};
   // NOTES: BEGIN INCLUSION
   for (initialiser; condition; loop_process)
-      // NOTES: END INCLUSION
+  // NOTES: END INCLUSION
   {
     std::cout << x << "\n";
   }

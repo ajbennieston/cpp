@@ -7,8 +7,8 @@
  */
 
 // NOTES: BEGIN INCLUSION
-int main() {/* ... */
+int main() { /* ... */
 }
-int main(int argc, char* argv[]) {/* ... */
+int main(int argc, char* argv[]) { /* ... */
 }
 // NOTES: END INCLUSION

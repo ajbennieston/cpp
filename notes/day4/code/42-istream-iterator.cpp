@@ -16,7 +16,7 @@ int main() {
 
   while (input != end) {
     int value = *input++;
-    std::cout << value* value << "\n";
+    std::cout << value * value << "\n";
   }
   return 0;
 }

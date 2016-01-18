@@ -25,7 +25,7 @@ class ParticleInfo {
   // operator, all private:
   ParticleInfo();
   ParticleInfo(const ParticleInfo&);
-  ~ParticleInfo() {};
+  ~ParticleInfo(){};
   ParticleInfo& operator=(const ParticleInfo&);
 
   // Pointer to instance:

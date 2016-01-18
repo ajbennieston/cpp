@@ -9,7 +9,7 @@
 int main() {
   // NOTES: BEGIN INCLUSION
   // make array of four pointers to int
-  int** x = new int* [4];
+  int** x = new int*[4];
   for (int i = 0; i < 4; ++i) {
     // make array of i+1 ints
     x[i] = new int[i + 1];

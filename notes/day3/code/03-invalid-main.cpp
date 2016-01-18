@@ -7,6 +7,6 @@
  */
 
 // NOTES: BEGIN INCLUSION
-void main() {/* ... */
+void main() { /* ... */
 }  // WRONG!
 // NOTES: END INCLUSION
